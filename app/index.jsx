@@ -1,4 +1,3 @@
-import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
 import { Text, TextInput, TouchableOpacity } from "react-native";
@@ -7,7 +6,6 @@ import { auth } from "../firebaseConfig";
 
 
 export default function Index() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -15,7 +13,6 @@ export default function Index() {
     try {
       const user = await signInWithEmailAndPassword(auth, email, password);
       console.log("User signed in successfully");
-      if (user) router.replace('/signOut');
     } catch (error) {
       console.log(error);
       alert("Error signing in: " + error.message);
@@ -26,7 +23,6 @@ export default function Index() {
     try {
       const user = await createUserWithEmailAndPassword(auth, email, password);
       console.log("User signed up successfully");
-      if (user) router.replace('/signOut');
     } catch (error) {
       console.log(error);
       alert("Error signing up: " + error.message);

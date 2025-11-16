@@ -1,5 +1,27 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import { onAuthStateChanged } from "firebase/auth";
+import { useEffect, useState } from "react";
+import { auth } from "../firebaseConfig";
+
 
 export default function RootLayout() {
-  return <Stack />;
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+
+      if (user) {
+        router.replace("/signOut");
+      } else {
+        router.replace("/");
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
+
+  return <Stack/>;
 }
