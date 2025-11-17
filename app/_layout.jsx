@@ -14,7 +14,7 @@ export default function RootLayout() {
       setUser(user);
 
       if (user) {
-        router.replace("/signOut");
+        router.replace("/(tabs)/home");
       } else {
         router.replace("/");
       }
