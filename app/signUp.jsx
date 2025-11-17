@@ -1,8 +1,8 @@
 import { useLocalSearchParams } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { Button, TextInput } from "react-native-paper";
+import { StyleSheet, View } from "react-native";
+import { Button, TextInput, Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth } from "../firebaseConfig";
 
@@ -89,22 +89,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  forgot: {
-    textAlign: "right",
-    marginBottom: 24,
-  },
-
   button: {
     paddingVertical: 4,
     borderRadius: 6,
-  },
-
-  footer: {
-    alignItems: "center",
-    marginTop: 24,
-  },
-
-  link: {
-    textDecorationLine: "underline",
-  },
+  }
 });
