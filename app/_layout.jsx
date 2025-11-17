@@ -1,6 +1,7 @@
 import { Stack, useRouter } from "expo-router";
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
+import { PaperProvider } from "react-native-paper";
 import { auth } from "../firebaseConfig";
 
 
@@ -23,5 +24,9 @@ export default function RootLayout() {
   }, []);
 
 
-  return <Stack/>;
+  return (
+    <PaperProvider>
+      <Stack/>
+    </PaperProvider>
+  );
 }
