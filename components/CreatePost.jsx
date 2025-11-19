@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Stylesheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
+import LocationSearch from './LocationSearch';
 
 const CreatePost = () => {
     const [postData, setPostData] = useState({
         title: '',
-        description: ''
+        description: '',
+        location: null,
     });
 
   return (
@@ -25,11 +27,18 @@ const CreatePost = () => {
             onChangeText={text => setPostData({...postData, description: text})}
             style={styles.input}
         />
+
+        <LocationSearch 
+            onSelect={(loc) => {
+                setPostData((prev) => ({ ...prev, location: loc }));
+            }} 
+            style={styles.input}
+        />
     </View>
   );
 }
 
-const styles = Stylesheet.create({
+const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
