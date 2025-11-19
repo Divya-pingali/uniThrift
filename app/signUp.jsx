@@ -1,10 +1,11 @@
 import { useLocalSearchParams } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { Button, TextInput, Text } from "react-native-paper";
+import { Button, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { auth } from "../firebaseConfig";
+import { auth, db } from "../firebaseConfig";
 
 export default function SignUp() {
     const params = useLocalSearchParams();
@@ -14,8 +15,16 @@ export default function SignUp() {
 
     const signUp = async () => {
         try {
-        const user = await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await setDoc(doc(db, "users", user.uid), {
+          name: name,
+          email: email
+        });
+
         console.log("User created successfully");
+
         } catch (error) {
         console.log(error);
         alert("Error signing up: " + error.message);
