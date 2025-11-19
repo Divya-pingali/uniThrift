@@ -1,11 +1,11 @@
 import { StyleSheet } from "react-native";
-import { Text } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import CreatePost from "../../components/CreatePost";
 
 export default function Post() {
   return (
     <SafeAreaView style={styles.container}>
-      <Text variant="headlineMedium">This is Post</Text>
+      <CreatePost/>
     </SafeAreaView>
   );
 }
