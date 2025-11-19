@@ -34,6 +34,14 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen 
+        name="MapScreen" 
+        options={{
+          title: "Maps",
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Icon source="map-marker" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen 
         name="profile" 
         options={{
           title: "Profile",
