@@ -28,10 +28,10 @@ const CreatePost = () => {
             style={styles.input}
         />
 
-        <LocationSearch 
+        <LocationSearch
             onSelect={(loc) => {
                 setPostData((prev) => ({ ...prev, location: loc }));
-            }} 
+            }}
             style={styles.input}
         />
     </View>
