@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useState } from "react";
@@ -84,7 +84,7 @@ const EditableImage = ({ imageUri, setImageUri, imagePath, editable, text, style
             <Image source={{ uri: imageUri }} style={style} />
           ) : (
             <View style={style}>
-              {text ? <Text>Tap to edit</Text> : <MaterialCommunityIcons name="camera-plus-outline" size={24} />}
+              {text ? <Text>Tap to edit</Text> : <Ionicons name="add-outline" size={24} />}
             </View>
           )}
         </Pressable>
@@ -94,7 +94,7 @@ const EditableImage = ({ imageUri, setImageUri, imagePath, editable, text, style
             <Image source={{ uri: imageUri }} style={style} />
           ) : (
             <View style={style}>
-              {text ? <Text>No image.</Text> : <MaterialCommunityIcons name="camera-outline" size={24} />}
+              {text ? <Text>No image.</Text> : <Ionicons name="camera-outline" size={24} />}
             </View>
           )}
         </>
