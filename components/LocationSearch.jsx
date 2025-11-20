@@ -1,9 +1,12 @@
 import { View } from 'react-native';
 import GooglePlacesTextInput from 'react-native-google-places-textinput';
 
-const LocationSearch = () => {
+const LocationSearch = ({ onSelect }) => {
   const handlePlaceSelect = (place) => {
     console.log('Selected place:', place);
+    if (onSelect) {
+      onSelect(place);
+    }
   };
 
   const customStyles = {
