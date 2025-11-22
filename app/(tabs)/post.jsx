@@ -1,36 +1,13 @@
-import { useState } from "react";
-import { StyleSheet } from "react-native";
-import { Button } from "react-native-paper";
-import CreateListing from "../../components/CreateListing";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import CreatePost from "../../components/CreatePost";
 
 export default function Post() {
-  const [postType, setPostType] = useState(null);
+  const { type } = useLocalSearchParams();
+  const router = useRouter();
 
-  const handlePostSuccess = () => setPostType(null);
+  const handlePostSuccess = () => {
+    router.replace("/post");
+  };
 
-  return (
-    <>
-      {!postType ? (
-        <CreateListing onSelect={setPostType} />
-      ) : (
-        <>
-          <Button onPress={() => setPostType(null)} style={styles.backButton}>
-            Go Back
-          </Button>
-          <CreatePost type={postType} onPostSuccess={handlePostSuccess} />
-        </>
-      )}
-    </>
-  );
+  return <CreatePost type={type} onPostSuccess={handlePostSuccess} />;
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  backButton: {
-    position: "absolute",
-    top: 40,
-    left: 16,
-    zIndex: 10
-  }
-});
