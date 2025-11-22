@@ -1,4 +1,3 @@
-import { View } from 'react-native';
 import GooglePlacesTextInput from 'react-native-google-places-textinput';
 
 const LocationSearch = ({ onSelect }) => {
@@ -45,7 +44,6 @@ const LocationSearch = ({ onSelect }) => {
   };
 
   return (
-    <View style={{ width: '100%' }}>
     <GooglePlacesTextInput
       apiKey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY}
       onPlaceSelect={handlePlaceSelect}
@@ -53,7 +51,6 @@ const LocationSearch = ({ onSelect }) => {
       styles={customStyles}
       placeHolderText='Meetup Location'
     />
-    </View>
   );
 };
 export default LocationSearch;

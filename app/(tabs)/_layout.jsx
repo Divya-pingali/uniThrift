@@ -1,4 +1,4 @@
-import { Tabs, useRouter } from "expo-router";
+import { Tabs, usePathname, useRouter } from "expo-router";
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet } from "react-native";
 import { Icon } from "react-native-paper";
@@ -7,6 +7,8 @@ import CreateListing from "../../components/CreateListing";
 export default function TabsLayout() {
   const [showListingModal, setShowListingModal] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+  const hideTabBar = pathname === "/post" || pathname.startsWith("/post/");
 
   return (
     <>
@@ -36,6 +38,7 @@ export default function TabsLayout() {
           tabBarActiveTintColor: "#6200ee",
           tabBarInactiveTintColor: "#858585",
           headerShown: false,
+          tabBarStyle: hideTabBar ? { display: 'none' } : undefined,
         }}
       >
         <Tabs.Screen 
