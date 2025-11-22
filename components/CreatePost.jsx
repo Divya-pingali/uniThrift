@@ -1,8 +1,9 @@
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Chip, Dialog, Menu, Portal, Text, TextInput } from 'react-native-paper';
-import { auth, db } from '../firebaseConfig';
+import { auth, db, storage } from '../firebaseConfig';
 import EditableImage from './EditableImage';
 import LocationSearch from './LocationSearch';
 
@@ -81,7 +82,7 @@ const CreatePost = ({ type, onPostSuccess }) => {
 
         if (!title) missingFields.push('Title');
         if (!description) missingFields.push('Description');
-        //if (!image) missingFields.push('Image');
+        if (!image) missingFields.push('Image');
         //if (!location) missingFields.push('Location');
 
         if (type === 'sell' && !sellingPrice) {
@@ -103,8 +104,18 @@ const CreatePost = ({ type, onPostSuccess }) => {
             try {
                 const user = auth.currentUser;
                 if (user) {
+                    let imageUrl = postData.image;
+                    if (postData.image && (postData.image.startsWith('file://') || postData.image.startsWith('data:'))) {
+                        const response = await fetch(postData.image);
+                        const blob = await response.blob();
+                        const storageRef = ref(storage, imagePath);
+                        await uploadBytes(storageRef, blob);
+                        imageUrl = await getDownloadURL(storageRef);
+                    }
+
                     await addDoc(collection(db, "posts"), {
                         ...postData,
+                        image: imageUrl,
                         userId: user.uid,
                         createdAt: serverTimestamp(),
                         postType: type,
