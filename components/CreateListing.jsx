@@ -14,8 +14,7 @@ const CreateListing = ({onSelect}) => {
         </Text>
 
         <Card.Content>
-          <View style={styles.innerView}>
-            
+          <View style={styles.innerView}> 
             <TouchableOpacity activeOpacity={1}style={styles.optionCard} onPress={() => onSelect("sell")}>
               <View style={styles.iconCircle}>
                 <Ionicons name="pricetags-outline" size={32} color="black" />
@@ -56,7 +55,8 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 250,
     paddingVertical: 30,
-    borderRadius: 0
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16
   },
   innerView: {
     flexDirection: "row",
