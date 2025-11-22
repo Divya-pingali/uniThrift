@@ -1,7 +1,7 @@
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { Button, Chip, Dialog, Menu, Portal, Text, TextInput } from 'react-native-paper';
 import { auth, db, storage } from '../firebaseConfig';
 import EditableImage from './EditableImage';
@@ -136,7 +136,13 @@ const CreatePost = ({ type, onPostSuccess }) => {
     
     const [imagePath] = useState(() => `posts/${Date.now()}.jpg`);
   return (
-    <View style={styles.container}>
+   <FlatList
+    style={styles.scroll} 
+    contentContainerStyle={styles.content}
+    keyboardShouldPersistTaps="handled"
+    data={[]}
+    ListHeaderComponent={
+     <>
         <Portal>
             <Dialog visible={dialogVisible} onDismiss={hideDialog}>
                 <Dialog.Title>{dialogTitle}</Dialog.Title>
@@ -262,21 +268,23 @@ const CreatePost = ({ type, onPostSuccess }) => {
         <Button mode="contained" onPress={handleSubmit} style={styles.button}>
             Submit Post
         </Button>
-        
-    </View>
+    </>
+    }
+    />
   );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    scroll: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%'
+    },
+    content: {
+        paddingVertical: 24,
+        paddingHorizontal: 16,
     },
     input: {
         marginBottom: 16,
-        width: '90%'
+        width: '100%'
     },
     image: {
         width: 200,

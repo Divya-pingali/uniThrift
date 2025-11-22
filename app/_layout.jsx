@@ -2,6 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { PaperProvider } from "react-native-paper";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { auth } from "../firebaseConfig";
 
 
@@ -25,8 +26,12 @@ export default function RootLayout() {
 
 
   return (
-    <PaperProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </PaperProvider>
+    <SafeAreaProvider>
+      <PaperProvider>
+        <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+          <Stack screenOptions={{ headerShown: false }} />
+        </SafeAreaView>
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }
