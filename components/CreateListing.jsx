@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   title: {
-    fontWeight: "600",
+    fontWeight: "bold",
     alignSelf: "center",
     margin: 15,
   },

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "3160003306",
+    "project_id": "unithrift-a5381",
+    "storage_bucket": "unithrift-a5381.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:3160003306:android:bb00f929c5f9cf09cb3d93",
+        "android_client_info": {
+          "package_name": "com.divyapingali.unithrift"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCH06_WooNu8RwmvzL-ZdSYL9KNU5CEcV0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,7 +1,7 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Tabs, usePathname, useRouter } from "expo-router";
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet } from "react-native";
-import { Icon } from "react-native-paper";
 import CreateListing from "../../components/CreateListing";
 
 export default function TabsLayout() {
@@ -45,10 +45,20 @@ export default function TabsLayout() {
           name="home" 
           options={{
             title: "Home",
-            tabBarIcon: ({ color, size }) => (
-              <Icon source="home" color={color} size={size} />
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons name={focused ? "home" : "home-outline"} color={color} size={size} />
             ),
           }}  
+        />
+
+        <Tabs.Screen 
+          name="MapScreen" 
+          options={{
+            title: "Map",
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons name={focused ? "compass" : "compass-outline"} color={color} size={size} />
+            ),
+          }}
         />
 
         <Tabs.Screen
@@ -61,27 +71,18 @@ export default function TabsLayout() {
           }}
           options={{
             title: "Post",
-            tabBarIcon: ({ color, size }) => (
-              <Icon source="plus-box" color={color} size={size} />
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons name={focused ? "add-circle" : "add-circle-outline"} color={color} size={size} />
             ),
           }}
         />
 
         <Tabs.Screen 
-          name="MapScreen" 
+          name="chat" 
           options={{
-            title: "Map",
-            tabBarIcon: ({ color, size }) => (
-              <Icon source="map" color={color} size={size} />
-            ),
-          }}
-        />
-        <Tabs.Screen 
-          name="profile" 
-          options={{
-            title: "Profile",
-            tabBarIcon: ({ color, size }) => (
-              <Icon source="account" color={color} size={size} />
+            title: "Chat",
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons name={focused ? "chatbubbles" : "chatbubbles-outline"} color={color} size={size} />
             ),
           }}
         />
@@ -89,8 +90,8 @@ export default function TabsLayout() {
           name="signOut" 
           options={{
             title: "Sign Out",
-            tabBarIcon: ({ color, size }) => (
-              <Icon source="logout" color={color} size={size} />
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons name={focused ? "person" : "person-outline"} color={color} size={size} />
             ),
           }}
         />

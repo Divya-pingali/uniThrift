@@ -50,23 +50,40 @@ export default function ChatsListScreen() {
       data={chats}
       keyExtractor={(item) => item.id}
       ItemSeparatorComponent={Divider}
-      renderItem={({ item }) => (
-        <Pressable
-          onPress={() =>
-            router.push({
-              pathname: "/chats/[chatId]",
-              params: { chatId: item.id },
-            })
-          }
-        >
-          <View style={{ padding: 16 }}>
-            <Text variant="titleMedium">Conversation</Text>
-            <Text style={{ marginTop: 4, opacity: 0.65 }}>
-              {item.lastMessage || "No messages yet"}
-            </Text>
-          </View>
-        </Pressable>
-      )}
+      renderItem={({ item }) => {
+        const firebaseUser = auth.currentUser;
+        const otherUserId = item.participants?.find(
+          (uid) => uid !== firebaseUser?.uid
+        );
+
+        let otherUserName = "User";
+        let productTitle = item.listingName || "Listing";
+
+        if (item.otherUserName) otherUserName = item.otherUserName;
+        if (item.productTitle) productTitle = item.productTitle;
+
+        return (
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/chats/[chatId]",
+                params: {
+                  chatId: item.id,
+                  otherUserName,
+                  productTitle,
+                },
+              })
+            }
+          >
+            <View style={{ padding: 16 }}>
+              <Text variant="titleMedium">Conversation</Text>
+              <Text style={{ marginTop: 4, opacity: 0.65 }}>
+                {item.lastMessage || "No messages yet"}
+              </Text>
+            </View>
+          </Pressable>
+        );
+      }}
     />
   );
 }

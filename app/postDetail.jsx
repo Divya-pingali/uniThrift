@@ -4,7 +4,7 @@ import { useLocalSearchParams } from "expo-router";
 import { addDoc, collection, doc, getDoc, getDocs, query, serverTimestamp, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, View } from "react-native";
-import { Button, Chip, Divider, Text } from "react-native-paper";
+import { Button, Divider, Text } from "react-native-paper";
 import { db } from "../firebaseConfig";
 
 import { useRouter } from "expo-router";
@@ -113,114 +113,120 @@ async function startChat() {
         <ScrollView contentContainerStyle={{ padding: 24 }} showsVerticalScrollIndicator={false}>
           <Image
             source={{ uri: post.image }}
-            style={{ width: "100%", height: 400, borderRadius: 4, marginBottom: 16 }}
-            elevation={1}
+            style={{ width: "100%", height: 450, borderRadius: 8, marginBottom: 12 }}
+            elevation={4}
           />
 
-          <View style={{ alignItems: "flex-start", marginBottom: 8, width: "100%" }}>
-           <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "700",
-              marginBottom: 6
-            }}
-          >
-            {post.title}
-          </Text>
-
           {tags.length > 0 && (
-        <View
-          style={{
-            flexDirection: "row",
-            flexWrap: "wrap",
-            marginBottom: 10,
-          }}
-        >
-          {tags.map((tag, index) => (
-            <Chip
-              key={index}
-              style={{
-                marginRight: 4,
-                marginBottom: 4,
-                borderRadius: 999,
-                height: 32,
-                justifyContent: "center",
-              }}
-              textStyle={{
-                fontSize: 10,
-                textTransform: "uppercase",
-                fontWeight: 'bold'
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 12,
               }}
             >
-              {tag}
-            </Chip>
-          ))}
-        </View>
-      )}
+              {tags.map((tag, index) => (
+                <View
+                  key={index}
+                  style={{
+                    backgroundColor: "rgba(0, 0, 0, 0.05)",
+                    borderRadius: 6,
+                    paddingVertical: 4,
+                    paddingHorizontal: 7,
+                    marginRight: 6,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 9,
+                      fontWeight: "bold",
+                      color: "rgba(0,0,0,1)",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {tag}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+
+          <View style={{ alignItems: "flex-start", marginBottom: 12, width: "100%" }}>
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: "700",
+                marginBottom: 8
+              }}
+            >
+              {post.title}
+            </Text>
+            
             <View
               style={{
-                borderRadius: 6,
-                paddingVertical: 16,
-                paddingHorizontal: 16,
-                alignSelf: "flex-start",
+                borderRadius: 8,
+                paddingVertical: 8,
+                paddingHorizontal: 12,
                 backgroundColor:
                   post.postType === "sell"
                     ? "#2e7d3215"
                     : post.postType === "rent"
                     ? "#0d47a11A"
                     : "#6a1b9a20",
-                borderColor:
-                  post.postType === "sell"
-                    ? "#2e7d32"
-                    : post.postType === "rent"
-                    ? "#0d47a1"
-                    : "#6a1b9a",
-                borderWidth: 1,
               }}
             >
-              <Text
-                style={{
-                  fontWeight: "700",
-                  fontSize: 15,
-                  color:
-                    post.postType === "sell"
-                      ? "#2e7d32"
-                      : post.postType === "rent"
-                      ? "#0d47a1"
-                      : "#6a1b9a",
-                }}
-              >
-                {post.postType === "sell" && `$${post.sellingPrice}`}
-                {post.postType === "rent" && `$${post.rentalPrice} / ${post.rentalPriceUnit}`}
-                {post.postType === "donate" && "FREE"}
-              </Text>
+              {post.postType === "sell" && (
+                <Text style={{ fontWeight: "700", fontSize: 16, color: "#2e7d32" }}>
+                  {`$${post.sellingPrice}`}
+                </Text>
+              )}
+              {post.postType === "rent" && (
+                <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                  <Text style={{ fontWeight: "700", fontSize: 16, color: "#0d47a1" }}>
+                    {`$${post.rentalPrice}`}
+                  </Text>
+                  <Text style={{ color: '#0d47a1' }}> / </Text>
+                  <Text style={{ fontWeight: "400",fontSize: 12, color: "#0d47a1" }}>
+                    {post.rentalPriceUnit}
+                  </Text>
+                </View>
+              )}
+              {post.postType === "donate" && (
+                <Text style={{ fontWeight: "700", fontSize: 16, color: "#6a1b9a" }}>
+                  {"FREE"}
+                </Text>
+              )}
             </View>
+          </View>
             
-            <Text variant="titleMedium" style={{ marginTop: 12 }}>Item Description</Text>
+          <View style={{ backgroundColor: "rgba(0,0,0,0.05)", borderRadius: 8, padding: 12, marginTop: 4 }}>
+            <Text variant="titleMedium" style={{ marginBottom: 4 }}>Item Description</Text>
             <Text variant="bodyMedium" style={{ color: "rgba(0,0,0,0.7)", lineHeight: 22 }}>
               {post.description}
             </Text>
-
-            { post.postType === "rent" && post.rentalPriceDeposit && (
-              <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#E3E2E6", padding: 12, borderRadius: 8, marginVertical: 16 }}>
-                <Ionicons name="information-circle-outline" size={25} color="#49454F" style={{ margin: 3 }} />
-                <Text variant="titleSmall" style={{ marginBottom: 4 }}>
-                  This item requires an initial deposit of {post.rentalPriceDeposit} HKD
-                </Text>
-              </View>
-            )}
-
-            { post.postType === "rent" && post.rentalPriceDuration && (
-              <>
-                <Text variant="titleMedium" style={{ marginTop: 8 }}>Available for</Text>
-                <Text variant="titleSmall" style={{ marginBottom: 12, color: "rgba(0,0,0,0.6)" }}>
-                  {post.rentalPriceDuration}
-                </Text>
-              </>
-            )}
           </View>
 
-          {post.location && (
+          { post.postType === "rent" && post.rentalPriceDeposit && (
+            <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#E3E2E6", padding: 12, borderRadius: 8, marginVertical: 16 }}>
+              <Ionicons name="information-circle-outline" size={25} color="#49454F" style={{ margin: 3 }} />
+              <Text variant="titleSmall" style={{ marginBottom: 4 }}>
+                This item requires an initial deposit of {post.rentalPriceDeposit} HKD
+              </Text>
+            </View>
+          )}
+
+          { post.postType === "rent" && post.rentalPriceDuration && (
+            <>
+              <Text variant="titleMedium" style={{ marginTop: 8 }}>Available for</Text>
+              <Text variant="titleSmall" style={{ marginBottom: 12, color: "rgba(0,0,0,0.6)" }}>
+                {post.rentalPriceDuration}
+              </Text>
+            </>
+          )}
+
+          { post.location && (
             <>
               <Divider style={{ marginVertical: 16 }} color="rgba(0,0,0,0.4)" width="100%" />
               <Text variant="titleMedium" style={{ marginTop: 12 }}>Pickup Location</Text>

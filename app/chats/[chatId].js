@@ -1,4 +1,4 @@
-// app/chats/[chatId].js
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import {
     addDoc,
@@ -9,103 +9,156 @@ import {
     orderBy,
     query,
     serverTimestamp,
-    setDoc
+    setDoc,
 } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { GiftedChat } from "react-native-gifted-chat";
-import { ActivityIndicator } from "react-native-paper";
+import { ActivityIndicator, Text } from "react-native-paper";
 import { auth, db } from "../../firebaseConfig";
 
 export default function ChatScreen() {
-  const { chatId } = useLocalSearchParams();
+  const params = useLocalSearchParams();
 
-  // Logged in user
+  const chatId = params.chatId;
+  const otherUserName = params.otherUserName;
+  const productTitle = params.productTitle;
+
   const firebaseUser = auth.currentUser;
+
+  const [messages, setMessages] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
 
-  // Messages loaded from Firestore
-  const [messages, setMessages] = useState(null);
-
-  // Fetch user’s Firestore profile to get "name"
   useEffect(() => {
-    async function fetchUser() {
-      if (!firebaseUser) return;
+    if (!firebaseUser) return;
+
+    const load = async () => {
       const ref = doc(db, "users", firebaseUser.uid);
       const snap = await getDoc(ref);
       if (snap.exists()) setUserProfile(snap.data());
-    }
-    fetchUser();
-  }, [firebaseUser]);
+    };
 
-  // Listen for messages
+    load();
+  }, []);
+
   useEffect(() => {
     if (!chatId) return;
 
-    const q = query(
-      collection(db, "chats", chatId, "messages"),
-      orderBy("createdAt", "desc")
-    );
+    const ref = collection(db, "chats", chatId, "messages");
+    const q = query(ref, orderBy("createdAt", "desc"));
 
     const unsub = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map((docSnap) => {
+      const list = snapshot.docs.map((docSnap) => {
         const data = docSnap.data();
         return {
           _id: docSnap.id,
           text: data.text,
           createdAt: data.createdAt?.toDate() || new Date(),
           user: {
-            _id: data.senderId
-          }
+            _id: data.senderId,
+            name: data.senderName || "User",
+          },
         };
       });
-
-      setMessages(msgs);
+      setMessages(list);
     });
 
     return () => unsub();
   }, [chatId]);
 
-  // Send a message
-  const handleSend = useCallback(async (msgs = []) => {
-    const m = msgs[0];
-    if (!m || !m.text.trim()) return;
+  const handleSend = useCallback(
+    async (msgs = []) => {
+      const msg = msgs[0];
+      if (!msg || !msg.text.trim()) return;
 
-    await addDoc(collection(db, "chats", chatId, "messages"), {
-      text: m.text.trim(),
-      senderId: firebaseUser.uid,
-      createdAt: serverTimestamp(),
-    });
+      await addDoc(collection(db, "chats", chatId, "messages"), {
+        text: msg.text.trim(),
+        senderId: firebaseUser.uid,
+        senderName: userProfile.name,
+        createdAt: serverTimestamp(),
+      });
 
-    // update chat metadata
-    await setDoc(
-      doc(db, "chats", chatId),
-      {
-        lastMessage: m.text.trim(),
-        lastMessageAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
-  }, [chatId, firebaseUser]);
+      await setDoc(
+        doc(db, "chats", chatId),
+        {
+          lastMessage: msg.text.trim(),
+          lastMessageAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    },
+    [firebaseUser, userProfile]
+  );
+
+  const renderCustomAvatar = (props) => (
+    <Ionicons
+      name="person-circle-outline"
+      size={32}
+      color={props.position === "left" ? "#999" : "#4b7bec"}
+      style={{ marginLeft: props.position === "left" ? 0 : 4 }}
+    />
+  );
 
   if (!messages || !userProfile) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={styles.center}>
         <ActivityIndicator />
       </View>
     );
   }
 
   return (
-    <GiftedChat
-      messages={messages}
-      onSend={(msgs) => handleSend(msgs)}
-      user={{
-        _id: firebaseUser.uid,
-        name: userProfile?.name || "User"
-      }}
-      placeholder="Type a message..."
-      alwaysShowSend
-    />
+    <View style={{ flex: 1 }}>
+      <View style={styles.header}>
+        <Ionicons name="person-circle-outline" size={42} color="#777" />
+        <View style={{ marginLeft: 10 }}>
+          <Text style={styles.username}>{otherUserName}</Text>
+          <Text style={styles.product}>{productTitle}</Text>
+        </View>
+      </View>
+
+      <GiftedChat
+        messages={messages}
+        onSend={(msgs) => handleSend(msgs)}
+        user={{
+          _id: firebaseUser.uid,
+          name: userProfile?.name || "You",
+        }}
+        renderAvatar={renderCustomAvatar}
+        renderAvatarOnTop
+        renderUsernameOnMessage
+        bottomOffset={20}
+        placeholder="Type a message…"
+        alwaysShowSend
+      />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    paddingTop: 40,
+    paddingBottom: 10,
+    paddingHorizontal: 16,
+    backgroundColor: "white",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    flexDirection: "row",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  username: {
+    fontWeight: "bold",
+    fontSize: 18,
+    color: "#222",
+  },
+  product: {
+    fontSize: 14,
+    color: "#666",
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
