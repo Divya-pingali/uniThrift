@@ -1,6 +1,7 @@
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { RefreshControl, ScrollView } from "react-native";
+import { FlatList } from "react-native";
+import { Text } from "react-native-paper";
 import PostCard from "../../components/PostCard";
 import { db } from "../../firebaseConfig";
 
@@ -23,7 +24,7 @@ export default function Home() {
       setPosts(fetched);
     });
 
-    return () => unsubscribe(); 
+    return () => unsubscribe();
   }, []);
 
   const onRefresh = () => {
@@ -32,14 +33,16 @@ export default function Home() {
   };
 
   return (
-    <ScrollView
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      {posts.map((p) => (
-        <PostCard key={p.id} post={p} />
-      ))}
-    </ScrollView>
+    <FlatList
+      data={posts}
+      keyExtractor={(item) => item.id}
+      numColumns={2}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      contentContainerStyle={{ margin: 16 }}
+      columnWrapperStyle={{ justifyContent: 'space-between' }}
+      renderItem={({ item }) => <PostCard post={item} />}
+      ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 40 }}>No posts yet</Text>}
+    />
   );
 }

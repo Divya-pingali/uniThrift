@@ -1,132 +1,112 @@
-import { Image, StyleSheet, View } from "react-native";
-import { Card, Chip, Text } from "react-native-paper";
+import { useRouter } from 'expo-router';
+import { Pressable, View } from 'react-native';
+import { Card, Text } from 'react-native-paper';
 
-const PostCard = ({ post }) => {
-  if (!post) return null;
-
+const PostCard = ({ post = {} }) => {
+  const router = useRouter();
   const {
-    title,
-    description,
     image,
-    tags = [],
     postType,
-    sellingPrice,
     rentalPrice,
     rentalPriceUnit,
-    rentalPriceDuration,
-    rentalPriceDeposit,
-    location
+    sellingPrice,
+    title,
   } = post;
 
-  const renderPrice = () => {
-    if (postType === "sell") {
-      return <Text style={styles.price}>${sellingPrice}</Text>;
-    }
+  const mappingUnit = {
+    'monthly' : 'month',
+    'weekly' : 'week',
+    'daily' : 'day',
+    'yearly' : 'year'
+  }
 
-    if (postType === "donate") {
-      return <Text style={styles.price}>FREE</Text>;
-    }
-
-    if (postType === "rent") {
-      return (
-        <View>
-          <Text style={styles.price}>
-            ${rentalPrice} / {rentalPriceUnit}
-          </Text>
-          {rentalPriceDeposit ? (
-            <Text style={styles.subInfo}>Deposit: ${rentalPriceDeposit}</Text>
-          ) : null}
-          {rentalPriceDuration ? (
-            <Text style={styles.subInfo}>Availability: {rentalPriceDuration}</Text>
-          ) : null}
-        </View>
-      );
-    }
-
-    return null;
-  };
+  const PRICE_FONT_SIZE = 12;
 
   return (
-    <Card style={styles.card} mode="outlined">
-      {image && (
-        <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
-      )}
-
-      <Card.Content>
-        <Text variant="titleMedium" style={styles.title}>
+    <View 
+      style={{
+        width: '48%',
+        justifyContent: 'space-between',
+      }}
+    >
+      <Pressable onPress={() => router.push({ pathname: `/postDetail`, params: {id: post.id}})}>
+      <View style ={{ marginBottom: 20, padding: 10}}>
+      {/* <Card style ={{ marginBottom: 20, padding: 10, borderRadius: 10, backgroundColor: 'rgb(230,230,230,1)'}} elevation={1}> */}
+        <Card style={{borderRadius: 8, marginBottom: 6}} elevation={2}>
+        <Card.Cover 
+          source={{ uri: image }}
+          elevation={1}
+        />
+        </Card>
+        <Text
+          variant="titleMedium"
+          numberOfLines={2}
+          style={{
+            fontSize: 18,
+            color: 'rgba(0,0,0,1)',  
+            marginBottom: 6,
+          }}
+        >
           {title}
         </Text>
-
-        <Text style={styles.description}>{description}</Text>
-
-        {/* Price */}
-        <View style={{ marginTop: 6 }}>{renderPrice()}</View>
-
-        {/* Location */}
-        {location?.structured_formatting?.main_text ? (
-          <Text style={styles.location}>
-            {location.structured_formatting.main_text}
-          </Text>
+        {(postType === 'sell') && sellingPrice ? (
+          <View style={{
+            backgroundColor: '#2e7d3215',
+            borderRadius: 6,
+            paddingVertical: 6,
+            paddingHorizontal: 6,
+            alignSelf: 'flex-start',
+            borderWidth: 1,
+            borderColor: '#2e7d32'
+          }}>
+            <Text style={{ color: '#2e7d32', fontWeight: '700', fontSize: PRICE_FONT_SIZE }}>
+              ${sellingPrice}
+            </Text>
+          </View>
         ) : null}
 
-        {/* Tags */}
-        <View style={styles.tagContainer}>
-          {tags.map((tag) => (
-            <Chip key={tag} compact style={styles.tag}>
-              {tag}
-            </Chip>
-          ))}
-        </View>
-      </Card.Content>
-    </Card>
+        {postType === 'rent' && rentalPrice ? (
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: '#0d47a11A',
+            borderRadius: 8,
+            paddingVertical: 6,
+            paddingHorizontal: 6,
+            alignSelf: 'flex-start',
+            borderWidth: 1,
+            borderColor: '#0d47a1'
+          }}>
+            <Text style={{ color: '#0d47a1', fontWeight: '700', fontSize: PRICE_FONT_SIZE, marginRight: 4 }}>
+              ${rentalPrice}
+            </Text>
+            <Text style={{ color: '#0d47a1', fontWeight: '600', fontSize: PRICE_FONT_SIZE }}>
+              / {mappingUnit[rentalPriceUnit] || rentalPriceUnit}
+            </Text>
+          </View>
+        ) : null}
+
+        {postType === 'donate' ? (
+          <View style={{
+            backgroundColor: '#6a1b9a20',
+            borderRadius: 6,
+            paddingVertical: 6,
+            paddingHorizontal: 6,
+            alignSelf: 'flex-start',
+            borderWidth: 1,
+            borderColor: '#6a1b9a'
+          }}>
+            <Text style={{ color: '#6a1b9a', fontWeight: '700', fontSize: PRICE_FONT_SIZE }}>
+              FREE
+            </Text>
+          </View>
+        ) : null}
+      {/* </Card> */}
+      </View>
+      </Pressable>
+    </View>
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    width: "92%",
-    alignSelf: "center",
-    marginVertical: 10,
-    borderRadius: 12,
-  },
-  image: {
-    width: "100%",
-    height: 180,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-  },
-  title: {
-    marginTop: 8,
-    fontWeight: "600",
-  },
-  description: {
-    marginTop: 4,
-    color: "#444",
-  },
-  price: {
-    marginTop: 8,
-    fontWeight: "700",
-    fontSize: 16,
-    color: "#1a73e8",
-  },
-  subInfo: {
-    fontSize: 13,
-    color: "#666",
-  },
-  location: {
-    marginTop: 6,
-    fontSize: 14,
-    color: "#444",
-  },
-  tagContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 8,
-  },
-  tag: {
-    marginRight: 6,
-    marginBottom: 6,
-  },
-});
-
 export default PostCard;
+
