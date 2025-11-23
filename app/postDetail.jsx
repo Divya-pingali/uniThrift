@@ -1,11 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { useLocalSearchParams } from "expo-router";
-import { doc, getDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs, query, serverTimestamp, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, View } from "react-native";
 import { Button, Chip, Divider, Text } from "react-native-paper";
 import { db } from "../firebaseConfig";
+
+import { useRouter } from "expo-router";
+import { auth } from "../firebaseConfig";
+
+
 
 export default function PostDetail() {
   const { id } = useLocalSearchParams();
@@ -47,6 +52,57 @@ export default function PostDetail() {
 
   const tags = Array.isArray(post?.tags) ? post.tags : [];
 
+  const router = useRouter();
+
+async function startChat() {
+  const currentUser = auth.currentUser;
+  if (!currentUser) return;
+
+  const buyerId = currentUser.uid;
+  const sellerId = post.userId;   // <-- IMPORTANT: your field
+  const listingId = post.id;
+
+  // 1. Check if chat already exists
+  const q = query(
+    collection(db, "chats"),
+    where("participants", "array-contains", buyerId)
+  );
+
+  const snap = await getDocs(q);
+
+  let existingChat = null;
+
+  snap.forEach((docSnap) => {
+    const c = docSnap.data();
+    if (
+      c.participants.includes(sellerId) &&
+      c.listingId === listingId
+    ) {
+      existingChat = docSnap.id;
+    }
+  });
+
+  let chatId = existingChat;
+
+  // 2. No chat found? Create a new one
+  if (!chatId) {
+    const ref = await addDoc(collection(db, "chats"), {
+      participants: [buyerId, sellerId],
+      listingId,
+      lastMessage: "",
+      lastMessageAt: serverTimestamp(),
+    });
+
+    chatId = ref.id;
+  }
+
+  // 3. Navigate to chat
+  router.push({
+    pathname: "/chats/[chatId]",
+    params: { chatId },
+  });
+}
+
   return (
     <>
       {loading || !post ? (
@@ -54,10 +110,11 @@ export default function PostDetail() {
           <ActivityIndicator size="large" />
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 24 }}>
+        <ScrollView contentContainerStyle={{ padding: 24 }} showsVerticalScrollIndicator={false}>
           <Image
             source={{ uri: post.image }}
             style={{ width: "100%", height: 400, borderRadius: 4, marginBottom: 16 }}
+            elevation={1}
           />
 
           <View style={{ alignItems: "flex-start", marginBottom: 8, width: "100%" }}>
@@ -65,8 +122,7 @@ export default function PostDetail() {
             style={{
               fontSize: 24,
               fontWeight: "700",
-              marginBottom: 6,
-              marginTop: 6,
+              marginBottom: 6
             }}
           >
             {post.title}
@@ -77,26 +133,23 @@ export default function PostDetail() {
           style={{
             flexDirection: "row",
             flexWrap: "wrap",
-            marginTop: 12,
-            marginBottom: 24,
+            marginBottom: 10,
           }}
         >
           {tags.map((tag, index) => (
             <Chip
               key={index}
               style={{
-                marginRight: 8,
-                marginBottom: 8,
+                marginRight: 4,
+                marginBottom: 4,
                 borderRadius: 999,
-                paddingHorizontal: 6,
                 height: 32,
                 justifyContent: "center",
               }}
               textStyle={{
-                fontSize: 12,
-                fontWeight: "600",
+                fontSize: 10,
                 textTransform: "uppercase",
-                letterSpacing: 0.3,
+                fontWeight: 'bold'
               }}
             >
               {tag}
@@ -197,7 +250,7 @@ export default function PostDetail() {
         </ScrollView>
       )}
 
-      <Button mode="contained" style={{ margin: 8, width: "90%", alignSelf: "center", borderRadius: 4, height: 45 }}>
+      <Button onPress={startChat} mode="contained" style={{ margin: 8, width: "90%", alignSelf: "center", borderRadius: 4, height: 45 }}>
         Contact Seller
       </Button>
     </>

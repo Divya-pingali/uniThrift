@@ -1,10 +1,8 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { collection, getDocs } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
-import MapView from "react-native-map-clustering";
-import { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Button, Text } from "react-native-paper";
 import { db } from "../../firebaseConfig";
 
@@ -14,6 +12,25 @@ function MapScreen() {
   const router = useRouter();
 
   const MAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+  const locationGroups = posts.reduce((acc, post) => {
+    const key = `${post.location?.latitude},${post.location?.longitude}`;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(post);
+    return acc;
+  }, {});
+
+  function getJitterPosition(index, total) {
+    if (total <= 1) return { latOffset: 0, lngOffset: 0 };
+
+    const radius = 0.00012;
+    const angle = (index / total) * 2 * Math.PI;
+
+    return {
+      latOffset: Math.cos(angle) * radius,
+      lngOffset: Math.sin(angle) * radius,
+    };
+  }
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -42,13 +59,13 @@ function MapScreen() {
                 };
               }
             } catch (e) {
-              // fallback: return post as is
               return post;
             }
           }
           return post;
         })
       );
+
       setPosts(updatedData);
     };
     fetchPosts();
@@ -65,34 +82,36 @@ function MapScreen() {
           latitudeDelta: 0.08,
           longitudeDelta: 0.08,
         }}
-        clusterColor="#2e7d32"   
-        clusterTextColor="white"    
-        spiralEnabled={true}   
       >
         {posts.map(post => {
           if (!post.location?.latitude || !post.location?.longitude) return null;
-            let pinColor = 'green'; 
-            if (post.postType === 'rent') pinColor = 'blue'; 
-            if (post.postType === 'donate') pinColor = 'purple';
-            return (
-              <Marker
-                key={post.id}
-                coordinate={{
-                  latitude: post.location.latitude,
-                  longitude: post.location.longitude,
-                }}
-                onPress={() => setSelectedPost(post)}
-                pinColor={pinColor}
-              >
-                <View>
-                <Ionicons name="location-sharp" size={35} color={pinColor} />
-                </View>
-              </Marker>
-            );
+
+          const key = `${post.location.latitude},${post.location.longitude}`;
+          const group = locationGroups[key];
+          const index = group.indexOf(post);
+          const total = group.length;
+
+          const { latOffset, lngOffset } = getJitterPosition(index, total);
+
+          const lat = post.location.latitude + latOffset;
+          const lng = post.location.longitude + lngOffset;
+          
+          return (
+            <Marker
+              key={post.id}
+              coordinate={{ latitude: lat, longitude: lng }}
+              onPress={() => setSelectedPost(post)}
+               pinColor={
+                post.postType === "sell" ? "green" :
+                post.postType === "rent" ? "blue" :
+                post.postType === "donate" ? "purple" :
+                "red"
+              }
+            />
+          );
         })}
       </MapView>
 
-      {/* Preview Card */}
       {selectedPost && (
         <View style={styles.previewCard}>
           <Image
@@ -111,6 +130,7 @@ function MapScreen() {
               {selectedPost.postType === "donate" && "FREE"}
             </Text>
           </View>
+
           <Button
             mode="contained"
             style={{ margin: 8, borderRadius: 4, height: 45 }}
@@ -123,6 +143,7 @@ function MapScreen() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   previewCard: {
     position: "absolute",
