@@ -1,8 +1,10 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { collection, getDocs } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import MapView from "react-native-map-clustering";
+import { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Button, Text } from "react-native-paper";
 import { db } from "../../firebaseConfig";
 
@@ -56,27 +58,37 @@ function MapScreen() {
     <View style={{ flex: 1 }}>
       <MapView
         style={StyleSheet.absoluteFill}
-        provider="google"
+        provider={PROVIDER_GOOGLE}
         initialRegion={{
           latitude: 22.3193,
           longitude: 114.1694,
           latitudeDelta: 0.08,
           longitudeDelta: 0.08,
         }}
+        clusterColor="#2e7d32"   
+        clusterTextColor="white"    
+        spiralEnabled={true}   
       >
         {posts.map(post => {
           if (!post.location?.latitude || !post.location?.longitude) return null;
-          return (
-            <Marker
-              key={post.id}
-              coordinate={{
-                latitude: post.location.latitude,
-                longitude: post.location.longitude,
-              }}
-              title={post.title}
-              onPress={() => setSelectedPost(post)}
-            />
-          );
+            let pinColor = 'green'; 
+            if (post.postType === 'rent') pinColor = 'blue'; 
+            if (post.postType === 'donate') pinColor = 'purple';
+            return (
+              <Marker
+                key={post.id}
+                coordinate={{
+                  latitude: post.location.latitude,
+                  longitude: post.location.longitude,
+                }}
+                onPress={() => setSelectedPost(post)}
+                pinColor={pinColor}
+              >
+                <View>
+                <Ionicons name="location-sharp" size={35} color={pinColor} />
+                </View>
+              </Marker>
+            );
         })}
       </MapView>
 
@@ -99,9 +111,9 @@ function MapScreen() {
               {selectedPost.postType === "donate" && "FREE"}
             </Text>
           </View>
-
           <Button
             mode="contained"
+            style={{ margin: 8, borderRadius: 4, height: 45 }}
             onPress={() => router.push(`/postDetail?id=${selectedPost.id}`)}
           >
             View

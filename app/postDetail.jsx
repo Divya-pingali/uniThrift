@@ -143,7 +143,7 @@ export default function PostDetail() {
               </Text>
             </View>
             
-            <Text variant="titleMedium" style={{ marginTop: 30 }}>Item Description</Text>
+            <Text variant="titleMedium" style={{ marginTop: 12 }}>Item Description</Text>
             <Text variant="bodyMedium" style={{ color: "rgba(0,0,0,0.7)", lineHeight: 22 }}>
               {post.description}
             </Text>
