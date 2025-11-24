@@ -86,7 +86,7 @@ export default function SignUp() {
         email: userData.email,
         bio: userData.bio,
         phone: userData.phone,
-        image: imageUrl
+        image: null,
       });
       setSuccessMessage('Account created successfully!');
       setSuccessVisible(true);

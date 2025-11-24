@@ -4,7 +4,7 @@ import { useLocalSearchParams } from "expo-router";
 import { addDoc, collection, doc, getDoc, getDocs, query, serverTimestamp, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, View } from "react-native";
-import { Button, Divider, Text } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
 import { db } from "../firebaseConfig";
 
 import { useRouter } from "expo-router";
@@ -59,10 +59,9 @@ async function startChat() {
   if (!currentUser) return;
 
   const buyerId = currentUser.uid;
-  const sellerId = post.userId;   // <-- IMPORTANT: your field
+  const sellerId = post.userId;
   const listingId = post.id;
 
-  // 1. Check if chat already exists
   const q = query(
     collection(db, "chats"),
     where("participants", "array-contains", buyerId)
@@ -84,7 +83,6 @@ async function startChat() {
 
   let chatId = existingChat;
 
-  // 2. No chat found? Create a new one
   if (!chatId) {
     const ref = await addDoc(collection(db, "chats"), {
       participants: [buyerId, sellerId],
@@ -96,7 +94,6 @@ async function startChat() {
     chatId = ref.id;
   }
 
-  // 3. Navigate to chat
   router.push({
     pathname: "/chats/[chatId]",
     params: { chatId },
@@ -158,81 +155,81 @@ async function startChat() {
               style={{
                 fontSize: 24,
                 fontWeight: "700",
-                marginBottom: 8
+                marginBottom: 12
               }}
             >
               {post.title}
             </Text>
             
-            <View
-              style={{
-                borderRadius: 8,
-                paddingVertical: 8,
-                paddingHorizontal: 12,
-                backgroundColor:
-                  post.postType === "sell"
-                    ? "#2e7d3215"
-                    : post.postType === "rent"
-                    ? "#0d47a11A"
-                    : "#6a1b9a20",
-              }}
-            >
-              {post.postType === "sell" && (
-                <Text style={{ fontWeight: "700", fontSize: 16, color: "#2e7d32" }}>
-                  {`$${post.sellingPrice}`}
-                </Text>
-              )}
-              {post.postType === "rent" && (
-                <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                  <Text style={{ fontWeight: "700", fontSize: 16, color: "#0d47a1" }}>
-                    {`$${post.rentalPrice}`}
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <View
+                style={{
+                  borderRadius: 8,
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  backgroundColor:
+                    post.postType === "sell"
+                      ? "#2e7d3215"
+                      : post.postType === "rent"
+                      ? "#0d47a11A"
+                      : "#6a1b9a20",
+                }}
+              >
+                {post.postType === "sell" && (
+                  <Text style={{ fontWeight: "700", fontSize: 16, color: "#2e7d32" }}>
+                    {`$${post.sellingPrice}`}
                   </Text>
-                  <Text style={{ color: '#0d47a1' }}> / </Text>
-                  <Text style={{ fontWeight: "400",fontSize: 12, color: "#0d47a1" }}>
-                    {post.rentalPriceUnit}
+                )}
+                {post.postType === "rent" && (
+                  <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                    <Text style={{ fontWeight: "700", fontSize: 16, color: "#0d47a1" }}>
+                      {`$${post.rentalPrice}`}
+                    </Text>
+                    <Text style={{ color: '#0d47a1' }}> / </Text>
+                    <Text style={{ fontWeight: "400",fontSize: 12, color: "#0d47a1" }}>
+                      {post.rentalPriceUnit}
+                    </Text>
+                  </View>
+                )}
+                {post.postType === "donate" && (
+                  <Text style={{ fontWeight: "700", fontSize: 16, color: "#6a1b9a" }}>
+                    {"FREE"}
                   </Text>
+                )}
+              </View>
+              {post.postType === "rent" && post.rentalPriceDeposit && (
+                <View style={{ marginLeft: 8, borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: "#ffc10730" }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                    <Text style={{ fontWeight: "700", fontSize: 16, color: "#ff8f00" }}>
+                      {`$${post.rentalPriceDeposit}`}
+                    </Text>
+                    <Text style={{ fontWeight: "400", fontSize: 12, color: "#ff8f00", marginLeft: 4 }}>
+                      Refundable Deposit
+                    </Text>
+                  </View>
                 </View>
-              )}
-              {post.postType === "donate" && (
-                <Text style={{ fontWeight: "700", fontSize: 16, color: "#6a1b9a" }}>
-                  {"FREE"}
-                </Text>
               )}
             </View>
           </View>
             
-          <View style={{ backgroundColor: "rgba(0,0,0,0.05)", borderRadius: 8, padding: 12, marginTop: 4 }}>
+          <View style={{ backgroundColor: "rgba(0,0,0,0.05)", borderRadius: 8, padding: 12, marginTop: 4, marginBottom: 16 }}>
             <Text variant="titleMedium" style={{ marginBottom: 4 }}>Item Description</Text>
             <Text variant="bodyMedium" style={{ color: "rgba(0,0,0,0.7)", lineHeight: 22 }}>
               {post.description}
             </Text>
           </View>
 
-          { post.postType === "rent" && post.rentalPriceDeposit && (
-            <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#E3E2E6", padding: 12, borderRadius: 8, marginVertical: 16 }}>
-              <Ionicons name="information-circle-outline" size={25} color="#49454F" style={{ margin: 3 }} />
-              <Text variant="titleSmall" style={{ marginBottom: 4 }}>
-                This item requires an initial deposit of {post.rentalPriceDeposit} HKD
+          {post.postType === "rent" && post.rentalPriceDuration && (
+            <View style={{ padding: 8, marginBottom: 16 }}>
+              <Text variant="titleMedium" style={{ marginBottom: 2 }}>Available For</Text>
+              <Text variant="bodyMedium" style={{ color: "rgba(0,0,0,0.7)" }}>
+                {post.rentalPriceDuration}
               </Text>
             </View>
           )}
 
-          { post.postType === "rent" && post.rentalPriceDuration && (
-            <>
-              <Text variant="titleMedium" style={{ marginTop: 8 }}>Available for</Text>
-              <Text variant="titleSmall" style={{ marginBottom: 12, color: "rgba(0,0,0,0.6)" }}>
-                {post.rentalPriceDuration}
-              </Text>
-            </>
-          )}
-
           { post.location && (
-            <>
-              <Divider style={{ marginVertical: 16 }} color="rgba(0,0,0,0.4)" width="100%" />
-              <Text variant="titleMedium" style={{ marginTop: 12 }}>Pickup Location</Text>
-              <Text variant="titleSmall" style={{ marginBottom: 8, color: "rgba(0,0,0,0.6)" }}>
-                {post.location?.text?.text}
-              </Text>
+            <View style={{ borderRadius: 8, backgroundColor: "rgba(225,225,225,1)", border: 2, borderColor:'#aeaeae', overflow: "hidden" }} elevation={4}>
               <Pressable
                 onPress={() =>
                   Linking.openURL(
@@ -247,16 +244,24 @@ async function startChat() {
                     source={{
                       uri: `https://maps.googleapis.com/maps/api/staticmap?size=600x300&scale=2&zoom=16&markers=color:red|${coords.lat},${coords.lng}&key=${MAPS_KEY}`,
                     }}
-                    style={{ width: "100%", height: 220, borderRadius: 8, marginTop: 16 }}
+                    style={{ width: "100%", height: 220 }}
                   />
                 )}
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Text variant="titleMedium" style={{ paddingLeft: 12, paddingTop: 8, marginBottom: 4 }}>Pickup Location</Text>
+                  <Ionicons name="open-outline" size={16} color="black" style={{ marginLeft: 6, paddingTop: 6, marginBottom: 4 }} />
+                </View>
+                <Text variant="bodySmall" style={{ paddingHorizontal: 12, paddingBottom: 12, color: "rgba(0,0,0,0.7)" }}>
+                  {post.location?.text?.text}
+                </Text>
               </Pressable>
-            </>
+              
+            </View>
           )}
         </ScrollView>
       )}
 
-      <Button onPress={startChat} mode="contained" style={{ margin: 8, width: "90%", alignSelf: "center", borderRadius: 4, height: 45 }}>
+      <Button onPress={startChat} mode="contained" style={{ margin: 8, width: "90%", alignSelf: "center", borderRadius: 16, height: 45, justifyContent: "center" }}>
         Contact Seller
       </Button>
     </>

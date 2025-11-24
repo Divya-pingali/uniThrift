@@ -87,9 +87,9 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen 
-          name="signOut" 
+          name="profile" 
           options={{
-            title: "Sign Out",
+            title: "Profile",
             tabBarIcon: ({ focused, color, size }) => (
               <Ionicons name={focused ? "person" : "person-outline"} color={color} size={size} />
             ),
