@@ -25,7 +25,6 @@
     "expo-image-picker": "~17.0.8",
     "expo-linking": "~8.0.9",
     "expo-notifications": "~0.32.13",
-    "expo-permissions": "^14.4.0",
     "expo-router": "~6.0.15",
     "expo-splash-screen": "~31.0.11",
     "expo-status-bar": "~3.0.8",
