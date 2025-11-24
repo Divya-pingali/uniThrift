@@ -132,7 +132,7 @@ export default function ChatListScreen() {
           placeholder="Search conversations…"
           value={search}
           onChangeText={handleSearch}
-          style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 8 }}
+          style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 8, }}
         />
         <Text>No conversations yet</Text>
       </View>
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   },
   center: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
   },
   avatarContainer: {

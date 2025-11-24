@@ -59,7 +59,6 @@ export default function Index() {
           style={styles.input}
         />
 
-        <Text style={styles.forgot}>Forgot your password?</Text>
 
         <Button mode="contained" onPress={signIn} style={styles.button}>
           Login
