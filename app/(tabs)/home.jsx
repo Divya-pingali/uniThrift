@@ -1,17 +1,32 @@
 import { useRouter } from "expo-router";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot, orderBy, query } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { FlatList } from "react-native";
+import { FlatList, View } from "react-native";
 import { FAB, Text } from "react-native-paper";
 import PostCard from "../../components/PostCard";
-import { db } from "../../firebaseConfig";
+import { auth, db } from "../../firebaseConfig";
 
 export default function Home() {
   const router = useRouter();
   const [posts, setPosts] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
+    const fetchUserName = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          setUserName(userDocSnap.data().name);
+        } else {
+          setUserName(user.displayName || "");
+        }
+      }
+    };
+    fetchUserName();
+
     const q = query(
       collection(db, "posts"),
       orderBy("createdAt", "desc")
@@ -45,6 +60,12 @@ export default function Home() {
       contentContainerStyle={{ margin: 16 }}
       columnWrapperStyle={{ justifyContent: 'space-between' }}
       renderItem={({ item }) => <PostCard post={item} />}
+      ListHeaderComponent={
+        <View style={{ marginTop: 24, marginBottom: 16 }}>
+          <Text variant="titleMedium">Welcome,</Text>
+          <Text variant="headlineMedium" style={{ fontWeight: "bold" }}>{userName}</Text>
+        </View>
+      }
       ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 40 }}>No posts yet</Text>}
     />
     <FAB
