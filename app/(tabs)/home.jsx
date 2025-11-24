@@ -1,11 +1,13 @@
+import { useRouter } from "expo-router";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { FlatList } from "react-native";
-import { Text } from "react-native-paper";
+import { FAB, Text } from "react-native-paper";
 import PostCard from "../../components/PostCard";
 import { db } from "../../firebaseConfig";
 
 export default function Home() {
+  const router = useRouter();
   const [posts, setPosts] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -33,6 +35,7 @@ export default function Home() {
   };
 
   return (
+    <>
     <FlatList
       data={posts}
       keyExtractor={(item) => item.id}
@@ -44,5 +47,25 @@ export default function Home() {
       renderItem={({ item }) => <PostCard post={item} />}
       ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 40 }}>No posts yet</Text>}
     />
+    <FAB
+      icon="magnify"
+      size="medium"
+      style={{
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+        backgroundColor: 'white',
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 4
+      }}
+      onPress={() => {
+        router.push('/postSearch');
+      }}
+    />
+    </>
   );
 }
