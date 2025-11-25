@@ -41,6 +41,7 @@ export default function ChatListScreen() {
       setFilteredChats(items);
       setLoading(false);
 
+      // Load other user profiles
       const profilePromises = items.map(async (chat) => {
         const otherUserId = chat.participants.find(
           (uid) => uid !== firebaseUser.uid
@@ -65,6 +66,7 @@ export default function ChatListScreen() {
       });
       setUserProfiles(newProfiles);
 
+      // Load product titles
       const titlePromises = items.map(async (chat) => {
         if (!chat.listingId || productTitles[chat.listingId]) return null;
 
@@ -167,9 +169,10 @@ export default function ChatListScreen() {
           );
 
           const otherUserName = userProfiles[otherUserId] || "User";
+          const postId = item.listingId;
 
-          const productTitle = item.listingId
-            ? productTitles[item.listingId] || "Listing"
+          const productTitle = postId
+            ? productTitles[postId] || "Listing"
             : item.listingName || "Listing";
 
           const lastMessage = item.lastMessage || "No messages yet";
@@ -188,7 +191,9 @@ export default function ChatListScreen() {
                   pathname: "/chats/[chatId]",
                   params: {
                     chatId: item.id,
+                    otherUserId,
                     otherUserName,
+                    postId,
                     productTitle,
                   },
                 })

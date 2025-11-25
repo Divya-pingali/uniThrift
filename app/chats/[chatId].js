@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   addDoc,
   collection,
@@ -12,22 +12,32 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  View,
+} from "react-native";
 import { GiftedChat } from "react-native-gifted-chat";
-import { ActivityIndicator, Text } from "react-native-paper";
+import { ActivityIndicator, Button, Snackbar, Text } from "react-native-paper";
 import { auth, db } from "../../firebaseConfig";
 
 export default function ChatScreen() {
   const params = useLocalSearchParams();
+  const router = useRouter();
 
   const chatId = params.chatId;
+  const otherUserId = params.otherUserId;
   const otherUserName = params.otherUserName;
+  const postId = params.postId;
   const productTitle = params.productTitle;
 
   const firebaseUser = auth.currentUser;
 
   const [messages, setMessages] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
+  const [post, setPost] = useState(null);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
 
   useEffect(() => {
     if (!firebaseUser) return;
@@ -40,6 +50,18 @@ export default function ChatScreen() {
 
     load();
   }, []);
+
+  useEffect(() => {
+    if (!postId) return;
+
+    const loadPost = async () => {
+      const ref = doc(db, "posts", postId);
+      const snap = await getDoc(ref);
+      if (snap.exists()) setPost({ id: postId, ...snap.data() });
+    };
+
+    loadPost();
+  }, [postId]);
 
   useEffect(() => {
     if (!chatId) return;
@@ -90,6 +112,33 @@ export default function ChatScreen() {
     [firebaseUser, userProfile]
   );
 
+  const handleReserveBuyer = async () => {
+    try {
+      const postRef = doc(db, "posts", postId);
+
+      await setDoc(
+        postRef,
+        {
+          status: "reserved",
+          reservedFor: otherUserId,
+          reservedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      setSnackbarVisible(true);
+
+      setPost((prev) => ({
+        ...prev,
+        status: "reserved",
+        reservedFor: otherUserId,
+      }));
+    } catch (err) {
+      console.error(err);
+      alert("Error reserving item.");
+    }
+  };
+
   const renderCustomAvatar = (props) => (
     <Ionicons
       name="person-circle-outline"
@@ -99,13 +148,16 @@ export default function ChatScreen() {
     />
   );
 
-  if (!messages || !userProfile) {
+  if (!messages || !userProfile || !post) {
     return (
       <View style={styles.center}>
         <ActivityIndicator />
       </View>
     );
   }
+
+  const isSeller = post.userId === firebaseUser.uid;
+  const isReserved = post.status === "reserved";
 
   return (
     <KeyboardAvoidingView
@@ -115,11 +167,67 @@ export default function ChatScreen() {
     >
       <View style={styles.header}>
         <Ionicons name="person-circle-outline" size={42} color="#777" />
-        <View style={{ marginLeft: 10 }}>
-          <Text style={styles.username}>{otherUserName}</Text>
-          <Text style={styles.product}>{productTitle}</Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", flex: 1 }}>
+          <View style={{ marginLeft: 10 }}>
+            <Text style={styles.username}>{otherUserName}</Text>
+            <Text style={styles.product}>{productTitle}</Text>
+          </View>
+
+          {isSeller && !isReserved && (
+            <Button
+              mode="contained"
+              style={{ paddingHorizontal: 10, borderRadius: 8 }}
+              onPress={handleReserveBuyer}
+            >
+              Reserve
+            </Button>
+          )}
+
+          {isSeller && isReserved && post.reservedFor === otherUserId && (
+            <Ionicons
+              name="qr-code-outline"
+              size={32}
+              color="#4b7bec"
+              style={{ marginLeft: 12, alignSelf: "center" }}
+              onPress={() => {
+                if (postId && otherUserId) {
+                  router.push({
+                    pathname: "/MeetupQRCode",
+                    params: { postId, buyerId: otherUserId },
+                  });
+                } else {
+                  alert("QR code data is missing. Please try again.");
+                }
+              }}
+            />
+          )}
         </View>
       </View>
+
+      {isReserved && (
+        <View style={styles.infoBox}>
+          <Ionicons name="information-circle-outline" size={20} color="#555" />
+
+          {isSeller && post.reservedFor === otherUserId && (
+            <Text style={styles.infoText}>
+              You have reserved this item for {otherUserName}.
+            </Text>
+          )}
+
+          {!isSeller && post.reservedFor === otherUserId && (
+            <Text style={styles.infoText}>
+              This item has been reserved for you.
+            </Text>
+          )}
+
+          {!isSeller && post.reservedFor !== otherUserId && (
+            <Text style={styles.infoText}>
+              This item has been reserved for another person.
+            </Text>
+          )}
+        </View>
+      )}
+
       <View style={{ flex: 1 }}>
         <GiftedChat
           messages={messages}
@@ -135,6 +243,14 @@ export default function ChatScreen() {
           placeholder="Type a message…"
           alwaysShowSend
         />
+
+        <Snackbar
+          visible={snackbarVisible}
+          onDismiss={() => setSnackbarVisible(false)}
+          duration={3000}
+        >
+          Successfully reserved for {otherUserName}!
+        </Snackbar>
       </View>
     </KeyboardAvoidingView>
   );
@@ -160,6 +276,21 @@ const styles = StyleSheet.create({
   product: {
     fontSize: 14,
     color: "#666",
+  },
+  infoBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f1f1f5",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+  },
+  infoText: {
+    marginLeft: 10,
+    fontSize: 14,
+    color: "#555",
+    flexShrink: 1,
   },
   center: {
     flex: 1,
