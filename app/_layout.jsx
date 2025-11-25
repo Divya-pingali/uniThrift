@@ -1,4 +1,5 @@
 import { Stack, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { PaperProvider } from "react-native-paper";
@@ -29,6 +30,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <PaperProvider>
         <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+          <StatusBar style="dark" />
           <Stack screenOptions={{ headerShown: false }} />
         </SafeAreaView>
       </PaperProvider>

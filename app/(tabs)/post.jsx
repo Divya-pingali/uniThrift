@@ -181,7 +181,7 @@ export default function Post() {
       }
       setSuccessVisible(true);
       setTimeout(() => {
-        router.back();
+        router.replace('/(tabs)/home');
       }, 500);
     } catch (e) {
       console.error('Error saving document: ', e);
@@ -395,7 +395,7 @@ export default function Post() {
       />
     <Button 
       mode="contained"
-      style={{ margin: 8, width: "35%", alignSelf: 'flex-end', borderRadius: 4, height: 45 }} 
+      style={{ margin: 8, width: "90%", alignSelf: 'center', borderRadius: 16, height: 45, justifyContent: 'center' }} 
       onPress={() => {handleSubmit()}}
     >
       Submit
@@ -437,6 +437,7 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 16,
+    fontWeight: '600',
   },
   segmentedButtons: {
     marginBottom: 24,

@@ -72,7 +72,7 @@ export default function TabsLayout() {
           options={{
             title: "Post",
             tabBarIcon: ({ focused, color, size }) => (
-              <Ionicons name={focused ? "add-circle" : "add-circle-outline"} color={color} size={size} />
+              <Ionicons name={focused ? "add-circle" : "add-circle"} color={color} size={size} />
             ),
           }}
         />

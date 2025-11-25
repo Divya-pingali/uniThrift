@@ -90,15 +90,15 @@ export default function EditProfile() {
     <>
     <KeyboardAvoidingView
       style={styles.keyboardView}
-      behavior={Platform.OS === "ios" ? "padding" : "position"}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.logoContainer}>
+        <View style={styles.headerContainer}>
           <Text variant="headlineMedium" style={styles.header}>
             Edit Profile
           </Text>
-          <Text variant="bodyMedium" style={styles.componentDescription}>
-            Update your details below.
+          <Text variant="titleMedium" style={styles.subHeader}>
+            Update your details below
           </Text>
         </View>
         <View style={styles.form}>
@@ -113,17 +113,13 @@ export default function EditProfile() {
           />
         </View>
           <Text variant="titleMedium" style={styles.label}>Email</Text>
-          <TextInput
-            mode="outlined"
-            label="Email"
-            value={userData.email}
-            style={styles.input}
-            editable={false}
-          />
+          <View style={styles.emailContainer}>
+            <Text style={styles.emailText}>{userData.email}</Text>
+          </View>
           <Text variant="titleMedium" style={styles.label}>Name</Text>
           <TextInput
             mode="outlined"
-            label="Name"
+            placeholder="Name"
             value={userData.name}
             onChangeText={text => setUserData(prev => ({ ...prev, name: text }))}
             style={styles.input}
@@ -131,16 +127,16 @@ export default function EditProfile() {
           <Text variant="titleMedium" style={styles.label}>Bio</Text>
           <TextInput
             mode="outlined"
-            label="Bio"
+            placeholder="Bio"
             value={userData.bio}
             onChangeText={text => setUserData(prev => ({ ...prev, bio: text }))}
-            style={[styles.input, { minHeight: 100 }]}
+            style={[styles.input, { minHeight: 80 }]}
             multiline
           />
           <Text variant="titleMedium" style={styles.label}>Phone Number</Text>
           <TextInput
             mode="outlined"
-            label="Phone Number"
+            placeholder="Phone Number"
             value={userData.phone}
             onChangeText={text => {
               if (/^\d*$/.test(text)) {
@@ -174,12 +170,12 @@ export default function EditProfile() {
       </ScrollView>
     </KeyboardAvoidingView>
     <Button 
-          mode="contained" 
-          onPress={handleSave} 
-          style={styles.button}
-          disabled={loading}
-        >
-          Save Changes
+      mode="contained" 
+      onPress={handleSave} 
+      style={styles.button}
+      disabled={loading}
+    >
+      Save Changes
     </Button>
     </>
   );
@@ -188,45 +184,46 @@ export default function EditProfile() {
 const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   content: {
     padding: 16,
-    paddingBottom: 0,
     flexGrow: 1,
   },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 24,
+  headerContainer: {
+    alignItems: "flex-start",
+    marginTop: 24,
+    marginBottom: 16,
   },
   header: {
-    marginBottom: 16,
-    fontWeight: "600",
-    textAlign: "center",
+    fontWeight: "bold",
   },
-  componentDescription: {
-    marginBottom: 20,
+  subHeader: {
     color: '#49454F',
-    textAlign: 'center',
   },
   form: {
     width: "100%",
-    marginBottom: 16,
+    marginBottom: 8,
   },
   input: {
-    marginBottom: 24,
+    marginBottom: 8,
+  },
+  emailText: {
+    color: "gray",
+    fontWeight: "800",
+    fontSize: 16,
+    marginBottom: 16,
   },
   button: {
     margin: 8,
-    width: "45%",
-    alignSelf: 'flex-end',
-    borderRadius: 4,
+    width: "90%",
+    alignSelf: "center",
+    borderRadius: 16,
     height: 45,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   label: {
-    marginBottom: 4,
-    fontWeight: '500',
+    marginBottom: 2,
+    fontWeight: 'bold',
   },
   errorText: {
     color: '#B00020',
@@ -236,7 +233,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
     width: '100%',
     height: 180,
   },

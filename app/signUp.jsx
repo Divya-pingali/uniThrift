@@ -110,7 +110,7 @@ export default function SignUp() {
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.logoContainer}>
             <Text variant="headlineMedium" style={styles.header}>
               Create Account

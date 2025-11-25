@@ -62,6 +62,11 @@ async function startChat() {
   const sellerId = post.userId;
   const listingId = post.id;
 
+  // Fetch seller's name
+  const sellerDocRef = doc(db, "users", sellerId);
+  const sellerDocSnap = await getDoc(sellerDocRef);
+  const sellerName = sellerDocSnap.exists() ? sellerDocSnap.data().name : "Seller";
+
   const q = query(
     collection(db, "chats"),
     where("participants", "array-contains", buyerId)
@@ -96,7 +101,11 @@ async function startChat() {
 
   router.push({
     pathname: "/chats/[chatId]",
-    params: { chatId },
+    params: {
+      chatId,
+      otherUserName: sellerName,
+      productTitle: post.title,
+    },
   });
 }
 

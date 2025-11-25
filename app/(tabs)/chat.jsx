@@ -7,7 +7,7 @@ import {
   onSnapshot,
   orderBy,
   query,
-  where
+  where,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
@@ -127,24 +127,32 @@ export default function ChatListScreen() {
 
   if (!chats || chats.length === 0)
     return (
-      <View style={styles.center}>
+      <View style={styles.container}>
+        <Text variant="headlineMedium" style={styles.title}>
+          Chat
+        </Text>
         <Searchbar
           placeholder="Search conversations…"
           value={search}
           onChangeText={handleSearch}
-          style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 8, }}
+          style={{ marginBottom: 8 }}
         />
-        <Text>No conversations yet</Text>
+        <View style={styles.center}>
+          <Text>No conversations yet</Text>
+        </View>
       </View>
     );
 
   return (
-    <>
+    <View style={styles.container}>
+      <Text variant="headlineMedium" style={styles.title}>
+        Conversations
+      </Text>
       <Searchbar
         placeholder="Search conversations…"
         value={search}
         onChangeText={handleSearch}
-        style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 8 }}
+        style={{ marginBottom: 8 }}
       />
 
       <FlatList
@@ -212,20 +220,29 @@ export default function ChatListScreen() {
           );
         }}
       />
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    backgroundColor: "white",
+  },
+  title: {
+    fontWeight: "bold",
+    marginBottom: 12,
+  },
   row: {
     flexDirection: "row",
     paddingVertical: 14,
-    paddingHorizontal: 16,
     backgroundColor: "white",
   },
   center: {
     flex: 1,
-    justifyContent: "flex-start",
+    justifyContent: "center",
     alignItems: "center",
   },
   avatarContainer: {

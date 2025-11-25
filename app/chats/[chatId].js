@@ -1,18 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import {
-    addDoc,
-    collection,
-    doc,
-    getDoc,
-    onSnapshot,
-    orderBy,
-    query,
-    serverTimestamp,
-    setDoc,
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
 import { GiftedChat } from "react-native-gifted-chat";
 import { ActivityIndicator, Text } from "react-native-paper";
 import { auth, db } from "../../firebaseConfig";
@@ -108,7 +108,11 @@ export default function ChatScreen() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={120}
+    >
       <View style={styles.header}>
         <Ionicons name="person-circle-outline" size={42} color="#777" />
         <View style={{ marginLeft: 10 }}>
@@ -116,22 +120,23 @@ export default function ChatScreen() {
           <Text style={styles.product}>{productTitle}</Text>
         </View>
       </View>
-
-      <GiftedChat
-        messages={messages}
-        onSend={(msgs) => handleSend(msgs)}
-        user={{
-          _id: firebaseUser.uid,
-          name: userProfile?.name || "You",
-        }}
-        renderAvatar={renderCustomAvatar}
-        renderAvatarOnTop
-        renderUsernameOnMessage
-        bottomOffset={20}
-        placeholder="Type a message…"
-        alwaysShowSend
-      />
-    </View>
+      <View style={{ flex: 1 }}>
+        <GiftedChat
+          messages={messages}
+          onSend={(msgs) => handleSend(msgs)}
+          user={{
+            _id: firebaseUser.uid,
+            name: userProfile?.name || "You",
+          }}
+          renderAvatar={renderCustomAvatar}
+          renderAvatarOnTop
+          renderUsernameOnMessage
+          bottomOffset={20}
+          placeholder="Type a message…"
+          alwaysShowSend
+        />
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 

@@ -1,141 +1,208 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { getAuth } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, getFirestore, query, where } from "firebase/firestore";
+import { collection, doc, getDoc, getFirestore, onSnapshot, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Button, Card } from "react-native-paper";
+import { Dimensions, FlatList, Image, StyleSheet, TouchableHighlight, View } from "react-native";
+import { Button, Text } from "react-native-paper";
 import PostCard from "../../components/PostCard";
 import { auth } from "../../firebaseConfig";
 
 export default function Profile() {
-        const router = useRouter();
-        const [posts, setPosts] = useState([]);
-        const [loading, setLoading] = useState(true);
-        const [userName, setUserName] = useState("");
-        const [userEmail, setUserEmail] = useState("");
-        const [userBio, setUserBio] = useState("");
-        const [userPhone, setUserPhone] = useState("");
-        const [userImage, setUserImage] = useState(null);
+  const router = useRouter();
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [userBio, setUserBio] = useState("");
+  const [userPhone, setUserPhone] = useState("");
+  const [userImage, setUserImage] = useState(null);
 
-        const signOut = async () => {
-                try {
-                        await auth.signOut();
-                } catch (error) {
-                        console.log("Error signing out: ", error);
-                }
-        };
+  const signOut = async () => {
+    try {
+      await auth.signOut();
+    } catch (error) {
+      console.log("Error signing out: ", error);
+    }
+  };
 
-        useEffect(() => {
-                const fetchUserDataAndPosts = async () => {
-                        try {
-                                const authInstance = getAuth();
-                                const db = getFirestore();
-                                const user = authInstance.currentUser;
-                                if (!user) return;
-                                const userDocRef = doc(db, "users", user.uid);
-                                const userDocSnap = await getDoc(userDocRef);
-                                if (userDocSnap.exists()) {
-                                        const data = userDocSnap.data();
-                                        setUserName(data.name || "Your Profile");
-                                        setUserEmail(data.email || "");
-                                        setUserBio(data.bio || "");
-                                        setUserPhone(data.phone || "");
-                                        setUserImage(data.image || null);
-                                } else {
-                                        setUserName(user.displayName || "Your Profile");
-                                }
-                                // Fetch user posts
-                                const postsRef = collection(db, "posts");
-                                const q = query(postsRef, where("userId", "==", user.uid));
-                                const querySnapshot = await getDocs(q);
-                                const userPosts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                                setPosts(userPosts);
-                        } catch (error) {
-                                console.error("Error fetching user data or posts:", error);
-                        } finally {
-                                setLoading(false);
-                        }
-                };
-                fetchUserDataAndPosts();
-        }, []);
+  useEffect(() => {
+    const authInstance = getAuth();
+    const db = getFirestore();
+    const user = authInstance.currentUser;
+    if (!user) return;
 
-        const renderHeader = () => (
-                <>
-                        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                                <Text style={{ fontWeight: "bold", fontSize: 22 }}>Profile</Text>
-                                <Button mode="outlined" onPress={signOut}
-                                        style={styles.signOutButton}>
-                                        Sign Out
-                                </Button>
-                        </View>
-                        <TouchableOpacity onPress={() => router.push('/editProfile')}>
-                        <Card style={{ width: "100%", paddingBottom: 20, paddingHorizontal: 15 }}>
-                                <View style={styles.bioContainer}>
-                                        <View style={{ alignItems: "center", width: "25%" }}>
-                                                {userImage ? (
-                                                        <Image source={{ uri: userImage }} style={{ width: 70, height: 70, borderRadius: 35 }} />
-
-                                                ) : (
-                                                        <Ionicons name="person-circle" size={70} />
-                                                )}
-                                        </View>
-                                        <View style={{ marginTop: 16, width: "74%" }}>
-                                                <Text variant="titleMedium" style={styles.title}>{userName}</Text>
-                                                {userBio ? (
-                                                        <Text style={{ marginTop: 4, color: "#666", textAlign: "left" }}>{userBio}</Text>
-                                                ) : null}
-                                        </View>
-                                </View>
-                        </Card>
-                        </TouchableOpacity>
-                        <Text style={{ fontWeight: "bold", fontSize: 18, marginTop: 24 }}>Your Posts</Text>
-                </>
-        );
-
-        if (loading) {
-                return (
-                        <View style={styles.container}>
-                                {renderHeader()}
-                                <Text>Loading...</Text>
-                        </View>
-                );
+    // Fetch user data once
+    const fetchUserData = async () => {
+      try {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          const data = userDocSnap.data();
+          setUserName(data.name || "Your Profile");
+          setUserEmail(data.email || "");
+          setUserBio(data.bio || "");
+          setUserPhone(data.phone || "");
+          setUserImage(data.image || null);
+        } else {
+          setUserName(user.displayName || "Your Profile");
         }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+    fetchUserData();
 
-        return (
-                <View style={styles.container}>
-                        <FlatList
-                                data={posts}
-                                numColumns={2}
-                                keyExtractor={item => item.id}
-                                renderItem={({ item }) => <PostCard post={item} />}
-                                ListHeaderComponent={renderHeader}
-                                ListEmptyComponent={<Text style={{ marginTop: 16 }}>No posts found.</Text>}
-                                contentContainerStyle={{ paddingBottom: 24 }}
-                        />
-                </View>
-        );
+    // Real-time listener for user's posts
+    const postsRef = collection(db, "posts");
+    const q = query(postsRef, where("userId", "==", user.uid));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const userPosts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setPosts(userPosts);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error listening to posts:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const screenWidth = Dimensions.get("window").width;
+
+  const renderHeader = () => (
+    <>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <Text variant="headlineMedium" style={{ fontWeight: "bold" }}>Profile</Text>
+        <Button mode="text" onPress={signOut} textColor="red">Sign Out</Button>
+      </View>
+
+      <TouchableHighlight
+        onPress={() => router.push("/editProfile")}
+        underlayColor="rgba(0,0,0,0.1)"
+        style={styles.touchableCard}
+      >
+        <View style={styles.profileCard}>
+          <View style={styles.imageContainer}>
+            {userImage ? (
+              <Image source={{ uri: userImage }} style={styles.profileImage} />
+            ) : (
+              <Ionicons name="person-circle" size={120} color="#ccc" style={styles.defaultImage} />
+            )}
+          </View>
+          <View style={styles.textContainer}>
+            <Text variant="headlineSmall" style={styles.userName}>{userName}</Text>
+            {userEmail && <Text variant="bodySmall" style={styles.userEmail}>{userEmail}</Text>}
+            {userBio && <Text variant="bodySmall" style={styles.userBio}>{userBio}</Text>}
+          </View>
+        </View>
+      </TouchableHighlight>
+
+      <Text
+        variant="titleLarge"
+        style={{ fontWeight: "bold", marginBottom: 12, marginTop: 24 }}
+      >
+        Your Posts
+      </Text>
+    </>
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        {renderHeader()}
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={posts}
+        numColumns={2}
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => (
+          <View style={{ width: screenWidth * 0.44 }}>
+            <PostCard post={item} editable={true} />
+          </View>
+        )}
+        columnWrapperStyle={{ justifyContent: "space-between" }}
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={<Text style={{ marginTop: 16 }}>No posts found.</Text>}
+        contentContainerStyle={{ paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-        container: {
-                flex: 1,
-                padding: 24,
-        },
-        title: {
-                fontWeight: "600",
-                textAlign: "left",
-        },
-        bioContainer: {
-                marginTop: 16,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-        },
-        signOutButton: {
-                borderRadius: 6,
-                paddingVertical: 2,
-                paddingHorizontal: 8,
-                alignSelf: "flex-start",
-        },
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 24,
+  },
+  title: {
+    fontWeight: "600",
+    textAlign: "left"
+  },
+  bioContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  profileCard: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 8,
+    elevation: 4,
+    borderWidth: 0.25,
+    borderColor: "#aeaeae",
+    alignItems: 'center',
+    paddingTop: 70,
+    paddingBottom: 16,
+  },
+  touchableCard: {
+    borderRadius: 16,
+    margin: 4,
+    marginTop: 50,
+  },
+  imageContainer: {
+    position: 'absolute',
+    top: -60,
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  profileImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 1,
+    borderColor: '#aeaeae',
+  },
+  defaultImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60
+  },
+  textContainer: {
+    alignItems: 'center',
+    width: '100%'
+  },
+  userName: {
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  userEmail: {
+    color: '#666',
+    textAlign: 'center',
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  userBio: {
+    color: '#666',
+    textAlign: 'center',
+  }
 });

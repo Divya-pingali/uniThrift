@@ -9,7 +9,7 @@ import {
     startAt
 } from "firebase/firestore";
 import { useRef, useState } from "react";
-import { FlatList, Pressable, View } from "react-native";
+import { Dimensions, FlatList, Pressable, View } from "react-native";
 import { ActivityIndicator, Searchbar, Text } from "react-native-paper";
 import PostCard from "../components/PostCard";
 import { db } from "../firebaseConfig";
@@ -21,6 +21,8 @@ export default function PostSearchScreen() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef(null);
+
+  const screenWidth = Dimensions.get("window").width;
 
   const fetchSuggestions = async (term) => {
     if (!term.trim()) {
@@ -108,15 +110,10 @@ export default function PostSearchScreen() {
       {suggestions.length > 0 && (
         <View
           style={{
-            position: "absolute",
-            top: 72,
-            left: 14,
-            right: 14,
+            marginHorizontal: 14,
             backgroundColor: "white",
             borderRadius: 8,
             paddingVertical: 8,
-            elevation: 5,
-            zIndex: 50
           }}
         >
           {suggestions.map((item) => (
@@ -136,15 +133,17 @@ export default function PostSearchScreen() {
         data={results}
         keyExtractor={(item) => item.id}
         numColumns={2}
+        columnWrapperStyle={{ justifyContent: "space-between" }}
         contentContainerStyle={{
           paddingHorizontal: 14,
-          paddingTop: suggestions.length > 0 ? 60 : 0
         }}
         renderItem={({ item }) => (
-          <PostCard
-            post={item}
-            onPress={() => router.push(`/posts/${item.id}`)}
-          />
+          <View style={{ width: screenWidth * 0.44, marginBottom: 14 }}>
+            <PostCard
+              post={item}
+              onPress={() => router.push(`/postDetail?postId=${item.id}`)}
+            />
+          </View>
         )}
       />
     </View>
