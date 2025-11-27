@@ -105,6 +105,7 @@ async function startChat() {
       chatId,
       otherUserName: sellerName,
       productTitle: post.title,
+      postId: listingId, 
     },
   });
 }

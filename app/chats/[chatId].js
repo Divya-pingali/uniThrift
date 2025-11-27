@@ -54,13 +54,18 @@ export default function ChatScreen() {
   useEffect(() => {
     if (!postId) return;
 
-    const loadPost = async () => {
-      const ref = doc(db, "posts", postId);
-      const snap = await getDoc(ref);
-      if (snap.exists()) setPost({ id: postId, ...snap.data() });
-    };
+    const ref = doc(db, "posts", postId);
+    const unsub = onSnapshot(ref, (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      setPost({ id: postId, ...data });
 
-    loadPost();
+      if (data.status === "reserved" && data.reservedFor === firebaseUser.uid) {
+        setSnackbarVisible(true);
+      }
+    });
+
+    return unsub;
   }, [postId]);
 
   useEffect(() => {
@@ -85,7 +90,7 @@ export default function ChatScreen() {
       setMessages(list);
     });
 
-    return () => unsub();
+    return unsub;
   }, [chatId]);
 
   const handleSend = useCallback(
@@ -134,7 +139,6 @@ export default function ChatScreen() {
         reservedFor: otherUserId,
       }));
     } catch (err) {
-      console.error(err);
       alert("Error reserving item.");
     }
   };
@@ -196,7 +200,7 @@ export default function ChatScreen() {
                     params: { postId, buyerId: otherUserId },
                   });
                 } else {
-                  alert("QR code data is missing. Please try again.");
+                  alert("QR code data is missing.");
                 }
               }}
             />
@@ -214,13 +218,13 @@ export default function ChatScreen() {
             </Text>
           )}
 
-          {!isSeller && post.reservedFor === otherUserId && (
+          {!isSeller && post.reservedFor === firebaseUser.uid && (
             <Text style={styles.infoText}>
               This item has been reserved for you.
             </Text>
           )}
 
-          {!isSeller && post.reservedFor !== otherUserId && (
+          {!isSeller && post.reservedFor !== firebaseUser.uid && (
             <Text style={styles.infoText}>
               This item has been reserved for another person.
             </Text>
@@ -249,7 +253,9 @@ export default function ChatScreen() {
           onDismiss={() => setSnackbarVisible(false)}
           duration={3000}
         >
-          Successfully reserved for {otherUserName}!
+          <Text style={{ color: "#2e7d32" }}>
+            Successfully reserved for {otherUserName}!
+          </Text>
         </Snackbar>
       </View>
     </KeyboardAvoidingView>

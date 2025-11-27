@@ -163,6 +163,7 @@ export default function Post() {
           userId: user.uid,
           createdAt: serverTimestamp(),
           postType: type,
+          status: 'available',
         });
         setSuccessMessage('Post submitted successfully!');
         setPostData(prev => ({
