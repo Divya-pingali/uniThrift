@@ -59,32 +59,35 @@ export default function Home() {
         </View>
 
         <View>
-          <Text
-            variant="titleLarge"
-            style={{
-              fontWeight: "bold",
-              marginBottom:8,
-              paddingHorizontal: 16,
-            }}
-          >
-            Recently Added
-          </Text>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16 }}
-          >
-            {posts.slice(0, 10).map((post) => (
-              <View
-                key={post.id}
-                style={{ width: screenWidth * 0.44 }}
+          {posts.length > 0 && (
+            <>
+              <Text
+                variant="titleLarge"
+                style={{
+                  fontWeight: "bold",
+                  marginBottom: 8,
+                  paddingHorizontal: 16,
+                }}
               >
-                <PostCard post={post} />
-              </View>
-            ))}
-          </ScrollView>
+                Recently Added
+              </Text>
 
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 16 }}
+              >
+                {posts.slice(0, 10).map((post) => (
+                  <View
+                    key={post.id}
+                    style={{ width: screenWidth * 0.44 }}
+                  >
+                    <PostCard post={post} />
+                  </View>
+                ))}
+              </ScrollView>
+            </>
+          )}
           <Text
             variant="titleLarge"
             style={{

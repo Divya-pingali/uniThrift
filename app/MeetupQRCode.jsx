@@ -29,7 +29,6 @@ export default function ShowMeetupQR() {
       <Text style={{ marginBottom: 20, fontSize: 18, fontWeight: "600" }}>
         Show this QR to the buyer
       </Text>
-
       <QRCode
         value={qrData}
         size={240}

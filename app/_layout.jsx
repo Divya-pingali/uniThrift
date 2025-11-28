@@ -1,3 +1,4 @@
+import { StripeProvider } from '@stripe/stripe-react-native';
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { onAuthStateChanged } from "firebase/auth";
@@ -29,10 +30,12 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <PaperProvider>
+        <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY}>
         <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
           <StatusBar style="dark" />
           <Stack screenOptions={{ headerShown: false }} />
         </SafeAreaView>
+        </StripeProvider>
       </PaperProvider>
     </SafeAreaProvider>
   );

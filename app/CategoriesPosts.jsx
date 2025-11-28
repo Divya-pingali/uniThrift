@@ -1,14 +1,14 @@
 import { useLocalSearchParams } from "expo-router";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import {
-    Dimensions,
-    FlatList,
-    LayoutAnimation,
-    Platform,
-    ScrollView,
-    UIManager,
-    View,
+  Dimensions,
+  FlatList,
+  LayoutAnimation,
+  Platform,
+  ScrollView,
+  UIManager,
+  View,
 } from "react-native";
 import { Chip, Text } from "react-native-paper";
 import PostCard from "../components/PostCard";
@@ -41,7 +41,7 @@ export default function CategoriesPosts() {
   ];
 
   useEffect(() => {
-    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+    const q = query(collection(db, "posts"), where("status", "==", "available"), orderBy("createdAt", "desc"));
     const unsub = onSnapshot(q, (snapshot) => {
       const fetched = snapshot.docs.map((doc) => ({
         id: doc.id,

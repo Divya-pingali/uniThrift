@@ -19,7 +19,7 @@ import {
   View,
 } from "react-native";
 import { GiftedChat } from "react-native-gifted-chat";
-import { ActivityIndicator, Button, Snackbar, Text } from "react-native-paper";
+import { ActivityIndicator, Button, Dialog, IconButton, Portal, Text } from "react-native-paper";
 import { auth, db } from "../../firebaseConfig";
 
 export default function ChatScreen() {
@@ -37,7 +37,7 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [post, setPost] = useState(null);
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   useEffect(() => {
     if (!firebaseUser) return;
@@ -59,10 +59,6 @@ export default function ChatScreen() {
       if (!snap.exists()) return;
       const data = snap.data();
       setPost({ id: postId, ...data });
-
-      if (data.status === "reserved" && data.reservedFor === firebaseUser.uid) {
-        setSnackbarVisible(true);
-      }
     });
 
     return unsub;
@@ -131,15 +127,41 @@ export default function ChatScreen() {
         { merge: true }
       );
 
-      setSnackbarVisible(true);
-
       setPost((prev) => ({
         ...prev,
         status: "reserved",
         reservedFor: otherUserId,
       }));
-    } catch (err) {
+    } catch {
       alert("Error reserving item.");
+    }
+  };
+
+  const handleCancelReservation = () => {
+    setShowCancelDialog(true);
+  };
+
+  const confirmCancelReservation = async () => {
+    setShowCancelDialog(false);
+    try {
+      const postRef = doc(db, "posts", postId);
+      await setDoc(
+        postRef,
+        {
+          status: "available",
+          reservedFor: null,
+          reservedAt: null,
+        },
+        { merge: true }
+      );
+
+      setPost((prev) => ({
+        ...prev,
+        status: "available",
+        reservedFor: null,
+      }));
+    } catch {
+      alert("Error canceling reservation.");
     }
   };
 
@@ -171,13 +193,15 @@ export default function ChatScreen() {
     >
       <View style={styles.header}>
         <Ionicons name="person-circle-outline" size={42} color="#777" />
-        <View style={{ flexDirection: "row", justifyContent: "space-between", flex: 1 }}>
+        <View
+          style={{ flexDirection: "row", justifyContent: "space-between", flex: 1 }}
+        >
           <View style={{ marginLeft: 10 }}>
             <Text style={styles.username}>{otherUserName}</Text>
             <Text style={styles.product}>{productTitle}</Text>
           </View>
 
-          {isSeller && !isReserved && (
+          {isSeller && post.status === "available" && (
             <Button
               mode="contained"
               style={{ paddingHorizontal: 10, borderRadius: 8 }}
@@ -188,25 +212,33 @@ export default function ChatScreen() {
           )}
 
           {isSeller && isReserved && post.reservedFor === otherUserId && (
-            <Ionicons
-              name="qr-code-outline"
-              size={32}
-              color="#4b7bec"
-              style={{ marginLeft: 12, alignSelf: "center" }}
-              onPress={() => {
-                if (postId && otherUserId) {
-                  router.push({
-                    pathname: "/MeetupQRCode",
-                    params: { postId, buyerId: otherUserId },
-                  });
-                } else {
-                  alert("QR code data is missing.");
-                }
-              }}
-            />
+            <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "flex-end" }}>
+              <Ionicons
+                name="qr-code-outline"
+                size={32}
+                color="#4b7bec"
+                style={{ marginHorizontal: 12, marginRight: 24, alignSelf: "center" }}
+                onPress={() => {
+                  if (postId && otherUserId) {
+                    router.push({
+                      pathname: "/MeetupQRCode",
+                      params: { postId, buyerId: otherUserId },
+                    });
+                  } else {
+                    alert("QR code data is missing.");
+                  }
+                }}
+              />
+              <IconButton
+                mode="contained"
+                icon="close"
+                style={{ borderRadius: 8 }}
+                onPress={handleCancelReservation}
+              />
+            </View>
           )}
 
-           {isReserved && post.reservedFor === firebaseUser.uid && (
+          {isReserved && post.reservedFor === firebaseUser.uid && (
             <Ionicons
               name="scan-outline"
               size={32}
@@ -214,33 +246,38 @@ export default function ChatScreen() {
               style={{ marginLeft: 12, alignSelf: "center" }}
               onPress={() => {
                 router.push("/ScanMeetup");
-              }
-              }
+              }}
             />
           )}
         </View>
       </View>
 
-      {isReserved && (
+      {(isReserved || post.status === "exchanged") && (
         <View style={styles.infoBox}>
           <Ionicons name="information-circle-outline" size={20} color="#555" />
 
-          {isSeller && post.reservedFor === otherUserId && (
+          {isSeller && post.reservedFor === otherUserId && post.status === "reserved" && (
             <Text style={styles.infoText}>
               You have reserved this item for {otherUserName}.
             </Text>
           )}
 
-          {!isSeller && post.reservedFor === firebaseUser.uid && (
-            <Text style={styles.infoText}>
-              This item has been reserved for you.
-            </Text>
+          {!isSeller && post.reservedFor === firebaseUser.uid && post.status === "reserved" && (
+            <Text style={styles.infoText}>This item has been reserved for you.</Text>
           )}
 
-          {!isSeller && post.reservedFor !== firebaseUser.uid && (
+          {!isSeller && post.reservedFor !== firebaseUser.uid && post.status === "reserved" && (
             <Text style={styles.infoText}>
               This item has been reserved for another person.
             </Text>
+          )}
+
+          {!isSeller && post.reservedFor === firebaseUser.uid && post.status === "exchanged" && (
+            <Text style={styles.infoText}>The product has been delivered.</Text>
+          )}
+
+          {isSeller && post.status === "exchanged" && (
+            <Text style={styles.infoText}>The product has been delivered.</Text>
           )}
         </View>
       )}
@@ -260,16 +297,18 @@ export default function ChatScreen() {
           placeholder="Type a message…"
           alwaysShowSend
         />
-
-        <Snackbar
-          visible={snackbarVisible}
-          onDismiss={() => setSnackbarVisible(false)}
-          duration={3000}
-        >
-          <Text style={{ color: "#2e7d32" }}>
-            Successfully reserved for {otherUserName}!
-          </Text>
-        </Snackbar>
+        <Portal>
+          <Dialog visible={showCancelDialog} onDismiss={() => setShowCancelDialog(false)}>
+            <Dialog.Title>Cancel Reservation</Dialog.Title>
+            <Dialog.Content>
+              <Text>Are you sure you want to cancel this reservation? </Text>
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button onPress={() => setShowCancelDialog(false)} mode="text">No</Button>
+              <Button onPress={confirmCancelReservation} style={{borderRadius: 8, paddingHorizontal: 10}} mode="contained" >Yes</Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
       </View>
     </KeyboardAvoidingView>
   );
