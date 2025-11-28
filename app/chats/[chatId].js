@@ -205,6 +205,19 @@ export default function ChatScreen() {
               }}
             />
           )}
+
+           {isReserved && post.reservedFor === firebaseUser.uid && (
+            <Ionicons
+              name="scan-outline"
+              size={32}
+              color="#4b7bec"
+              style={{ marginLeft: 12, alignSelf: "center" }}
+              onPress={() => {
+                router.push("/ScanMeetup");
+              }
+              }
+            />
+          )}
         </View>
       </View>
 
