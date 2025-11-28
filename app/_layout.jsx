@@ -11,8 +11,6 @@ export default function RootLayout() {
   const router = useRouter();
   const [user, setUser] = useState(null);
 
-  console.log("Stripe PK >>>", process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
