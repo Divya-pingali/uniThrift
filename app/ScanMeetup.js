@@ -1,24 +1,25 @@
-import { BarCodeScanner } from "expo-barcode-scanner";
+import { Camera } from "expo-camera";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { auth, db } from "../firebaseConfig";
 
 export default function ScanMeetup() {
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
+  const cameraRef = useRef(null);
 
   const firebaseUser = auth.currentUser;
 
   useEffect(() => {
     const request = async () => {
-      const { status } = await BarCodeScanner.requestPermissionsAsync();
+      const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === "granted");
     };
     request();
   }, []);
 
-  const handleScan = async ({ data }) => {
+  const handleBarCodeScanned = async ({ data }) => {
     setScanned(true);
 
     try {
@@ -89,11 +90,14 @@ export default function ScanMeetup() {
 
   return (
     <View style={styles.container}>
-      <BarCodeScanner
-        onBarCodeScanned={scanned ? undefined : handleScan}
+      <Camera
+        ref={cameraRef}
         style={StyleSheet.absoluteFillObject}
+        onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+        barCodeScannerSettings={{
+          barCodeTypes: ["qr"],
+        }}
       />
-
       {scanned && (
         <TouchableOpacity
           style={styles.button}
