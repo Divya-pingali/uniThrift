@@ -19,43 +19,49 @@ export default function Checkout() {
   };
 
   const payNow = async () => {
-    const createPI = httpsCallable(functions, "createPaymentIntent");
-    const res = await createPI({ amount: Math.round(Number(price) * 100) });
+    try {
+      console.log("price:", price);
+      const createPI = httpsCallable(functions, "createPaymentIntent");
+      const res = await createPI({ amount: 100 });
 
-    if (res.data.error) {
-      showSnackbar(res.data.error);
-      return;
+      if (res.data.error) {
+        showSnackbar(res.data.error);
+        return;
+      }
+
+      const clientSecret = res.data.clientSecret;
+
+      const init = await initPaymentSheet({
+        paymentIntentClientSecret: clientSecret,
+        merchantDisplayName: "UniThrift",
+      });
+
+      if (init.error) {
+        showSnackbar(init.error.message);
+        return;
+      }
+
+      const result = await presentPaymentSheet();
+
+      if (result.error) {
+        showSnackbar("Payment failed: " + result.error.message);
+        return;
+      }
+
+      await setDoc(doc(db, "payments", postId), {
+        postId,
+        sellerId,
+        buyerId: auth.currentUser.uid,
+        amount: price,
+        timestamp: serverTimestamp(),
+        status: "success",
+      });
+
+      showSnackbar("Payment successful!");
+    } catch (err) {
+      console.log("Error calling createPaymentIntent:", err);
+      showSnackbar("Error calling backend: " + err.message);
     }
-
-    const clientSecret = res.data.clientSecret;
-
-    const init = await initPaymentSheet({
-      paymentIntentClientSecret: clientSecret,
-      merchantDisplayName: "UniThrift",
-    });
-
-    if (init.error) {
-      showSnackbar(init.error.message);
-      return;
-    }
-
-    const result = await presentPaymentSheet();
-
-    if (result.error) {
-      showSnackbar("Payment failed: " + result.error.message);
-      return;
-    }
-
-    await setDoc(doc(db, "payments", postId), {
-      postId,
-      sellerId,
-      buyerId: auth.currentUser.uid,
-      amount: price,
-      timestamp: serverTimestamp(),
-      status: "success",
-    });
-
-    showSnackbar("Payment successful!");
   };
 
   return (

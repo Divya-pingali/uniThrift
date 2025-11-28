@@ -117,7 +117,7 @@ export default function ScanMeetup() {
             pathname: "Checkout",
             params: {
               postId,
-              price: post.price,
+              price: post.sellingPrice,
               sellerId
             },
           });
