@@ -2,6 +2,7 @@ import { useStripe } from "@stripe/stripe-react-native";
 import { useLocalSearchParams } from "expo-router";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
+import { useState } from "react";
 import { View } from "react-native";
 import { Button, Snackbar, Text } from "react-native-paper";
 import { auth, db, functions } from "../firebaseConfig";
@@ -9,8 +10,8 @@ import { auth, db, functions } from "../firebaseConfig";
 export default function Checkout() {
   const { postId, price, sellerId } = useLocalSearchParams();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
-  const [snackbarVisible, setSnackbarVisible] = React.useState(false);
-  const [snackbarMsg, setSnackbarMsg] = React.useState("");
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMsg, setSnackbarMsg] = useState("");
 
   const showSnackbar = (msg) => {
     setSnackbarMsg(msg);

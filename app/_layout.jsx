@@ -7,10 +7,11 @@ import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { auth } from "../firebaseConfig";
 
-
 export default function RootLayout() {
   const router = useRouter();
   const [user, setUser] = useState(null);
+
+  console.log("Stripe PK >>>", process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -26,15 +27,14 @@ export default function RootLayout() {
     return unsubscribe;
   }, []);
 
-
   return (
     <SafeAreaProvider>
       <PaperProvider>
         <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY}>
-        <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
-          <StatusBar style="dark" />
-          <Stack screenOptions={{ headerShown: false }} />
-        </SafeAreaView>
+          <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+            <StatusBar style="dark" />
+            <Stack screenOptions={{ headerShown: false }} />
+          </SafeAreaView>
         </StripeProvider>
       </PaperProvider>
     </SafeAreaProvider>

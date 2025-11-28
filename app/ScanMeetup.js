@@ -7,8 +7,7 @@ import { useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View,
+  TouchableOpacity, View
 } from "react-native";
 import { Snackbar } from "react-native-paper";
 
