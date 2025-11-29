@@ -112,7 +112,6 @@ export default function ScanMeetup() {
           }
         });
 
-        if (chatId) {
           router.replace({
             pathname: "Checkout",
             params: {
@@ -121,9 +120,6 @@ export default function ScanMeetup() {
               sellerId
             },
           });
-        } else {
-          router.replace("/chats");
-        }
       }, 1200);
     } catch (e) {
       showSnackbar("Invalid QR code.");

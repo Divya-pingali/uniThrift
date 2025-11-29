@@ -38,6 +38,7 @@ export default function ChatScreen() {
   const [userProfile, setUserProfile] = useState(null);
   const [post, setPost] = useState(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showUnpaidDialog, setShowUnpaidDialog] = useState(false);
 
   useEffect(() => {
     if (!firebaseUser) return;
@@ -174,6 +175,14 @@ export default function ChatScreen() {
     />
   );
 
+  useEffect(() => {
+    if (post && post.status === "unpaid" && post.reservedFor === firebaseUser.uid) {
+      setShowUnpaidDialog(true);
+    } else {
+      setShowUnpaidDialog(false);
+    }
+  }, [post, firebaseUser]);
+
   if (!messages || !userProfile || !post) {
     return (
       <View style={styles.center}>
@@ -279,6 +288,18 @@ export default function ChatScreen() {
           {isSeller && post.status === "exchanged" && (
             <Text style={styles.infoText}>The product has been delivered.</Text>
           )}
+          {isSeller && post.status === "completed" && (
+            <Text style={styles.infoText}>The product has been delivered and the payment has been completed.</Text>
+          )}
+          {!isSeller && post.reservedFor === firebaseUser.uid && post.status === "completed" && (
+            <Text style={styles.infoText}>The product has been delivered.</Text>
+          )}
+          {isSeller && post.status === "unpaid" && (
+            <Text style={styles.infoText}>The product has been delivered but the payment is pending.</Text>
+          )}
+          {!isSeller && post.reservedFor === firebaseUser.uid && post.status === "unpaid" && (
+            <Text style={styles.infoText}>The product has been delivered but your payment is pending.</Text>
+          )}
         </View>
       )}
 
@@ -306,6 +327,15 @@ export default function ChatScreen() {
             <Dialog.Actions>
               <Button onPress={() => setShowCancelDialog(false)} mode="text">No</Button>
               <Button onPress={confirmCancelReservation} style={{borderRadius: 8, paddingHorizontal: 10}} mode="contained" >Yes</Button>
+            </Dialog.Actions>
+          </Dialog>
+          <Dialog visible={showUnpaidDialog} onDismiss={() => setShowUnpaidDialog(false)}>
+            <Dialog.Title>Payment Pending</Dialog.Title>
+            <Dialog.Content>
+              <Text>Your payment is pending. Please retry payment.</Text>
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button onPress={() => setShowUnpaidDialog(false)} mode="contained">OK</Button>
             </Dialog.Actions>
           </Dialog>
         </Portal>
