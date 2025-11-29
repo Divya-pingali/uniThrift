@@ -59,7 +59,6 @@ export default function Index() {
           style={styles.input}
         />
 
-
         <Button mode="contained" onPress={signIn} style={styles.button}>
           Login
         </Button>

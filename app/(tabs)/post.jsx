@@ -1,98 +1,144 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  serverTimestamp,
+  updateDoc
+} from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useEffect, useRef, useState } from "react";
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
-import { Button, Chip, Dialog, Portal, SegmentedButtons, Snackbar, Text, TextInput } from "react-native-paper";
-import { Dropdown } from 'react-native-paper-dropdown';
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  View
+} from "react-native";
+import {
+  Button,
+  Chip,
+  Dialog,
+  Portal,
+  SegmentedButtons,
+  Text,
+  TextInput
+} from "react-native-paper";
+import { Dropdown } from "react-native-paper-dropdown";
 import EditableImage from "../../components/EditableImage";
 import LocationSearch from "../../components/LocationSearch";
-import { auth, db, firebaseStorage } from '../../firebaseConfig';
+import AppSnackbar from "../../components/Snackbar";
+import { auth, db, firebaseStorage } from "../../firebaseConfig";
 
 export default function Post() {
-  const { type, id } = useLocalSearchParams(); 
+  const { type, id } = useLocalSearchParams();
   const router = useRouter();
   const imagePathRef = useRef(`posts/${Date.now()}.jpg`);
-  
+
   const TAG_OPTIONS = [
-    'Electronics',
-    'Furniture',
-    'Kitchenware',
-    'Study Supplies',
-    'Clothing & Accessories',
-    'Appliances',
-    'Personal Care'
+    "Electronics",
+    "Furniture",
+    "Kitchenware",
+    "Study Supplies",
+    "Clothing & Accessories",
+    "Appliances",
+    "Personal Care"
   ];
+
   const AVAILABILITY_OPTIONS = [
-    { label: '1 month', value: '1 month' },
-    { label: '3 months', value: '3 months' },
-    { label: '6 months', value: '6 months' },
-    { label: '1 year', value: '1 year' },
-    { label: '3 years', value: '3 years' },
-    { label: '3+ years', value: '3+ years' },
-    { label: 'Not decided / Negotiable', value: 'Not decided / Negotiable' },
+    { label: "1 month", value: "1 month" },
+    { label: "3 months", value: "3 months" },
+    { label: "6 months", value: "6 months" },
+    { label: "1 year", value: "1 year" },
+    { label: "3 years", value: "3 years" },
+    { label: "3+ years", value: "3+ years" },
+    { label: "Not decided / Negotiable", value: "Not decided / Negotiable" }
   ];
 
   const RECURRENCE_OPTIONS = [
-    { label: 'Daily', value: 'daily' },
-    { label: 'Weekly', value: 'weekly' },
-    { label: 'Monthly', value: 'monthly' },
-    { label: 'Yearly', value: 'yearly' },
+    { label: "Daily", value: "daily" },
+    { label: "Weekly", value: "weekly" },
+    { label: "Monthly", value: "monthly" },
+    { label: "Yearly", value: "yearly" }
   ];
 
+  const [loading, setLoading] = useState(false);
+
   const [postData, setPostData] = useState({
-    title: '',
-    description: '',
+    title: "",
+    description: "",
     image: null,
     location: null,
     tags: [],
-    sellingPrice: type === 'sell' ? '' : null,
-    rentalPrice: type === 'rent' ? '' : null,
-    rentalPriceUnit: type === 'rent' ? 'month' : null,
-    rentalPriceDuration: type === 'rent' ? 'Not decided / Negotiable' : null,
-    rentalPriceDeposit: type === 'rent' ? '' : null,
+    sellingPrice: type === "sell" ? "" : null,
+    rentalPrice: type === "rent" ? "" : null,
+    rentalPriceUnit: type === "rent" ? "month" : null,
+    rentalPriceDuration: type === "rent" ? "Not decided / Negotiable" : null,
+    rentalPriceDeposit: type === "rent" ? "" : null
   });
-  const [loading, setLoading] = useState(false);
-  
-  const handleNumericInput = (text, field) => {
-    if (/^\d*\.?\d*$/.test(text)) {
-      setPostData(prev => ({ ...prev, [field]: text }));
-    }
-  };
-    useEffect(() => {
-      async function fetchPost() {
-        if (id) {
-          setLoading(true);
-          const ref = doc(db, 'posts', id);
-          const snap = await getDoc(ref);
-          if (snap.exists()) {
-            const data = snap.data();
-            setPostData({
-              title: data.title || '',
-              description: data.description || '',
-              image: data.image || null,
-              location: data.location || null,
-              tags: Array.isArray(data.tags) ? data.tags : [],
-              sellingPrice: data.sellingPrice || '',
-              rentalPrice: data.rentalPrice || '',
-              rentalPriceUnit: data.rentalPriceUnit || 'month',
-              rentalPriceDuration: data.rentalPriceDuration || 'Not decided / Negotiable',
-              rentalPriceDeposit: data.rentalPriceDeposit || '',
-            });
-          }
-          setLoading(false);
-        }
-      }
-      fetchPost();
-    }, [id]);
+
   const [showTagLimit, setShowTagLimit] = useState(false);
 
   const [dialogVisible, setDialogVisible] = useState(false);
-  const [dialogTitle, setDialogTitle] = useState('');
-  const [dialogMessage, setDialogMessage] = useState('');
+  const [dialogTitle, setDialogTitle] = useState("");
+  const [dialogMessage, setDialogMessage] = useState("");
+
   const [successVisible, setSuccessVisible] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const handleNumericInput = (text, field) => {
+    if (/^\d*\.?\d*$/.test(text)) {
+      setPostData((prev) => ({ ...prev, [field]: text }));
+    }
+  };
+
+  useEffect(() => {
+    async function fetchPost() {
+      if (!id) return;
+
+      setLoading(true);
+      const ref = doc(db, "posts", id);
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        const data = snap.data();
+        setPostData({
+          title: data.title || "",
+          description: data.description || "",
+          image: data.image || null,
+          location: data.location || null,
+          tags: Array.isArray(data.tags) ? data.tags : [],
+          sellingPrice: data.sellingPrice || "",
+          rentalPrice: data.rentalPrice || "",
+          rentalPriceUnit: data.rentalPriceUnit || "month",
+          rentalPriceDuration:
+            data.rentalPriceDuration || "Not decided / Negotiable",
+          rentalPriceDeposit: data.rentalPriceDeposit || ""
+        });
+      }
+      setLoading(false);
+    }
+
+    fetchPost();
+  }, [id]);
+
+  const toggleTag = (tag) => {
+    setPostData((prev) => {
+      const selected = prev.tags.includes(tag);
+      if (!selected && prev.tags.length >= 3) {
+        setShowTagLimit(true);
+        return prev;
+      }
+      return {
+        ...prev,
+        tags: selected
+          ? prev.tags.filter((t) => t !== tag)
+          : [...prev.tags, tag]
+      };
+    });
+  };
 
   const showDialog = (title, message) => {
     setDialogTitle(title);
@@ -101,167 +147,149 @@ export default function Post() {
   };
   const hideDialog = () => setDialogVisible(false);
 
-  const toggleTag = (tag) => {
-    setPostData((prev) => {
-      const isSelected = prev.tags.includes(tag);
-      if (!isSelected && prev.tags.length >= 3) {
-        setShowTagLimit(true);
-        return prev; 
-      }
-      return {
-        ...prev,
-        tags: isSelected
-          ? prev.tags.filter((t) => t !== tag)
-          : [...prev.tags, tag]
-      };
-    });
-  };
-
   const handleSubmit = async () => {
-    const { title, description, image, location, sellingPrice, rentalPrice, rentalPriceUnit, rentalPriceDuration } = postData;
-    const missingFields = [];
-    if (!title) missingFields.push('Title');
-    if (!image) missingFields.push('Image');
-    if (!location) missingFields.push('Location'); 
-    if (type === 'sell' && !sellingPrice) missingFields.push('Price');
-    if (type === 'rent') {
-      if (!rentalPrice) missingFields.push('Price');
-      if (!rentalPriceUnit) missingFields.push('Price Unit');
+    const {
+      title,
+      image,
+      location,
+      sellingPrice,
+      rentalPrice,
+      rentalPriceUnit
+    } = postData;
+
+    const missing = [];
+    if (!title) missing.push("Title");
+    if (!image) missing.push("Image");
+    if (!location) missing.push("Location");
+    if (type === "sell" && !sellingPrice) missing.push("Price");
+    if (type === "rent") {
+      if (!rentalPrice) missing.push("Price");
+      if (!rentalPriceUnit) missing.push("Recurring Unit");
     }
-    if (missingFields.length > 0) {
-      showDialog('Missing Information', `Please fill out the following fields: ${missingFields.join(', ')}`);
-      return;
-    }
+
+    if (missing.length > 0)
+      return showDialog("Missing Information", missing.join(", "));
+
     try {
       const user = auth.currentUser;
-      if (!user) {
-        showDialog('Error', 'You must be logged in to create a post.');
-        return;
-      }
+      if (!user) return showDialog("Error", "You must be logged in.");
+
       let imageUrl = postData.image;
-      if (postData.image && (postData.image.startsWith('file://') || postData.image.startsWith('data:'))) {
-        const response = await fetch(postData.image);
-        const blob = await response.blob();
+      if (
+        imageUrl &&
+        (imageUrl.startsWith("file://") || imageUrl.startsWith("data:"))
+      ) {
+        const blob = await (await fetch(imageUrl)).blob();
         const storageRef = ref(firebaseStorage, imagePathRef.current);
         await uploadBytes(storageRef, blob);
         imageUrl = await getDownloadURL(storageRef);
       }
+
       if (id) {
-        // Edit mode: update existing post
-        const ref = doc(db, 'posts', id);
-        await updateDoc(ref, {
+        await updateDoc(doc(db, "posts", id), {
           ...postData,
           image: imageUrl,
-          postType: type,
+          postType: type
         });
-        setSuccessMessage('Post updated successfully!');
+        setSuccessMessage("Post updated successfully!");
       } else {
-        // Create mode: add new post
-        await addDoc(collection(db, 'posts'), {
+        await addDoc(collection(db, "posts"), {
           ...postData,
           image: imageUrl,
           userId: user.uid,
           createdAt: serverTimestamp(),
           postType: type,
-          status: 'available',
+          status: "available"
         });
-        setSuccessMessage('Post submitted successfully!');
-        setPostData(prev => ({
-          ...prev,
-          title: '',
-          description: '',
-          image: null,
-          tags: [],
-          sellingPrice: type === 'sell' ? '' : null,
-          rentalPrice: type === 'rent' ? '' : null,
-          rentalPriceUnit: type === 'rent' ? 'month' : null,
-          rentalPriceDuration: type === 'rent' ? '' : null,
-          rentalPriceDeposit: type === 'rent' ? '' : null,
-          location: null,
-        }));
+        setSuccessMessage("Post submitted successfully!");
       }
+
       setSuccessVisible(true);
-      setTimeout(() => {
-        router.replace('/(tabs)/home');
-      }, 500);
+      setTimeout(() => router.replace("/(tabs)/home"), 500);
     } catch (e) {
-      console.error('Error saving document: ', e);
-      showDialog('Error', 'There was an error saving your post.');
+      console.error("Post error:", e);
+      showDialog("Error", "There was an error saving your post.");
     }
   };
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={styles.center}>
         <Text>Loading...</Text>
       </View>
     );
   }
+
   return (
     <KeyboardAvoidingView
       style={styles.keyboardView}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <FlatList
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
         data={[]}
-        scrollEnabled={true}
-        removeClippedSubviews={false}
-        showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={false}
-        overScrollMode="never"
         ListHeaderComponent={
           <View style={styles.content}>
             <Text variant="headlineMedium" style={styles.header}>
-              {id ? 'Edit Listing' : 'Create a New Listing'}
+              {id ? "Edit Listing" : "Create a New Listing"}
             </Text>
+
             <Text variant="bodyMedium" style={styles.componentDescription}>
-              You have selected to {type} an item. Please provide the details below.
+              You have selected to {type} an item. Please provide the details.
             </Text>
+
             <SegmentedButtons
               value={type}
-              style={styles.segmentedButtons}
-              onValueChange={(value) => router.replace(id ? `/post?type=${value}&id=${id}` : `/post?type=${value}`)}
+              onValueChange={(value) =>
+                router.replace(
+                  id ? `/post?type=${value}&id=${id}` : `/post?type=${value}`
+                )
+              }
               buttons={[
-                { value: 'sell', label: 'Sell' },
-                { value: 'donate', label: 'Donate' },
-                { value: 'rent', label: 'Rent' },
+                { value: "sell", label: "Sell" },
+                { value: "donate", label: "Donate" },
+                { value: "rent", label: "Rent" }
               ]}
+              style={{ marginVertical: 12 }}
             />
+
             <Text variant="titleMedium" style={styles.label}>
               Upload Image
             </Text>
-            <View style={styles.imageContainer}>
-              <EditableImage
-                imageUri={postData.image}
-                setImageUri={(uri) => setPostData((prev) => ({ ...prev, image: uri }))}
-                imagePath={imagePathRef.current}
-                editable={true}
-                style={styles.image}
-              />
-            </View>
+            <EditableImage
+              imageUri={postData.image}
+              setImageUri={(uri) =>
+                setPostData((prev) => ({ ...prev, image: uri }))
+              }
+              imagePath={imagePathRef.current}
+              editable
+            />
+
             <Text variant="titleMedium" style={styles.label}>
               Product Name
             </Text>
             <TextInput
               mode="outlined"
               value={postData.title}
-              onChangeText={(text) => setPostData(prev => ({ ...prev, title: text }))}
+              onChangeText={(text) =>
+                setPostData((prev) => ({ ...prev, title: text }))
+              }
               style={styles.input}
             />
+
             <Text variant="titleMedium" style={styles.label}>
               Product Description
             </Text>
             <TextInput
               mode="outlined"
-              value={postData.description}
-              onChangeText={(text) => setPostData(prev => ({ ...prev, description: text }))}
-              style={styles.descriptionInput}
               multiline
+              value={postData.description}
+              onChangeText={(text) =>
+                setPostData((prev) => ({ ...prev, description: text }))
+              }
+              style={styles.descriptionInput}
             />
-            {type === 'sell' && (
+
+            {type === "sell" && (
               <>
                 <Text variant="titleMedium" style={styles.label}>
                   Price
@@ -270,30 +298,28 @@ export default function Post() {
                   mode="outlined"
                   label="HKD"
                   value={postData.sellingPrice}
-                  onChangeText={(text) => handleNumericInput(text, 'sellingPrice')}
-                  style={styles.input}
                   keyboardType="numeric"
+                  onChangeText={(t) => handleNumericInput(t, "sellingPrice")}
                   left={<TextInput.Icon icon="currency-usd" />}
                 />
               </>
             )}
-            {type === 'donate' && (
+
+            {type === "donate" && (
               <View style={styles.infoBox}>
                 <Ionicons
                   name="information-circle-outline"
                   size={25}
                   color="#49454F"
-                  style={{ margin: 3 }}
                 />
-                <Text variant="titleMedium" style={styles.label}>
-                  This item will be listed as Free
-                </Text>
+                <Text>This item will be listed as Free</Text>
               </View>
             )}
-            {type === 'rent' && (
+
+            {type === "rent" && (
               <>
                 <View style={styles.rentalPriceContainer}>
-                  <View style={{ margin: 4, width: '45%', flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <View style={{ width: "48%" }}>
                     <Text variant="titleMedium" style={styles.label}>
                       Price
                     </Text>
@@ -301,81 +327,80 @@ export default function Post() {
                       mode="outlined"
                       label="HKD"
                       value={postData.rentalPrice}
-                      onChangeText={(text) => handleNumericInput(text, 'rentalPrice')}
                       keyboardType="numeric"
+                      onChangeText={(t) => handleNumericInput(t, "rentalPrice")}
                       left={<TextInput.Icon icon="currency-usd" />}
-                      style={{ width: '100%' }}
                     />
                   </View>
-                  <View style={{ margin: 4, width: '45%', flexDirection: 'column', alignItems: 'flex-start' }}>
+
+                  <View style={{ width: "48%" }}>
                     <Text variant="titleMedium" style={styles.label}>
                       Recurring
                     </Text>
                     <Dropdown
                       options={RECURRENCE_OPTIONS}
                       value={postData.rentalPriceUnit}
-                      onSelect={(value) => setPostData(prev => ({ ...prev, rentalPriceUnit: value }))}
-                      style={styles.rentalPriceItem}
+                      onSelect={(value) =>
+                        setPostData((p) => ({ ...p, rentalPriceUnit: value }))
+                      }
                     />
                   </View>
                 </View>
-                <View style={{ width: '100%', marginTop: 16 }}>
-                  <Text variant="titleMedium" style={styles.label}>
-                    Deposit
-                  </Text>
-                  <TextInput
-                    mode="outlined"
-                    label="HKD"
-                    value={postData.rentalPriceDeposit}
-                    onChangeText={(text) => handleNumericInput(text, 'rentalPriceDeposit')}
-                    keyboardType="numeric"
-                    left={<TextInput.Icon icon="currency-usd" />}
-                    style={{ marginBottom: 16 }}
-                  />
-                  <Text variant="titleMedium" style={styles.label}>
-                    Duration
-                  </Text>
-                  <View style={{ width: '100%' }}>
-                    <Dropdown
-                      options={AVAILABILITY_OPTIONS}
-                      value={postData.rentalPriceDuration}
-                      onSelect={(value) => setPostData(prev => ({ ...prev, rentalPriceDuration: value }))}
-                    />
-                  </View>
-                </View>
+
+                <Text variant="titleMedium" style={styles.label}>
+                  Deposit
+                </Text>
+                <TextInput
+                  mode="outlined"
+                  label="HKD"
+                  value={postData.rentalPriceDeposit}
+                  keyboardType="numeric"
+                  onChangeText={(t) =>
+                    handleNumericInput(t, "rentalPriceDeposit")
+                  }
+                  left={<TextInput.Icon icon="currency-usd" />}
+                />
+
+                <Text variant="titleMedium" style={styles.label}>
+                  Duration
+                </Text>
+                <Dropdown
+                  options={AVAILABILITY_OPTIONS}
+                  value={postData.rentalPriceDuration}
+                  onSelect={(value) =>
+                    setPostData((p) => ({
+                      ...p,
+                      rentalPriceDuration: value
+                    }))
+                  }
+                />
               </>
             )}
-            <View style={{ width: '100%', marginTop: 40 }}>
-              <Text variant="titleMedium" style={styles.label}>
-                Meetup Location
-              </Text>
-              <Text variant="bodyMedium" style={styles.componentDescription}>
-                Choose a location where you would like to meet the buyer/donee/renter.
-              </Text>
-              <LocationSearch
-                onSelect={(loc) => {
-                  setPostData((prev) => ({ ...prev, location: loc }));
-                }}
-                style={styles.input}
-              />
-            </View>
-            <Text variant="titleMedium" style={[styles.label, { marginTop: 40 }]}>
+
+            <Text variant="titleMedium" style={[styles.label, { marginTop: 30 }]}>
+              Meetup Location
+            </Text>
+            <LocationSearch
+              onSelect={(loc) =>
+                setPostData((p) => ({ ...p, location: loc }))
+              }
+            />
+
+            <Text variant="titleMedium" style={[styles.label, { marginTop: 30 }]}>
               Categories
             </Text>
-            <Text variant="bodyMedium" style={styles.componentDescription}>
-              Choose up to 3 tags that best describe your item.
-            </Text>
+            <Text variant="bodyMedium">Choose up to 3 tags.</Text>
+
             <View style={styles.chipContainer}>
               {TAG_OPTIONS.map((tag) => {
                 const selected = postData.tags.includes(tag);
-                const limitReached = postData.tags.length >= 3;
                 return (
                   <Chip
                     key={tag}
                     mode="outlined"
                     selected={selected}
                     onPress={() => toggleTag(tag)}
-                    disabled={limitReached && !selected}
+                    disabled={!selected && postData.tags.length >= 3}
                     style={[styles.chip, selected && styles.chipSelected]}
                     textStyle={selected && styles.chipSelectedText}
                   >
@@ -384,124 +409,97 @@ export default function Post() {
                 );
               })}
             </View>
-            <Snackbar
+
+            <Button
+              mode="contained"
+              style={styles.submitButton}
+              onPress={handleSubmit}
+            >
+              Submit
+            </Button>
+
+            <Portal>
+              <Dialog visible={dialogVisible} onDismiss={hideDialog}>
+                <Dialog.Title>{dialogTitle}</Dialog.Title>
+                <Dialog.Content>
+                  <Text>{dialogMessage}</Text>
+                </Dialog.Content>
+                <Dialog.Actions>
+                  <Button onPress={hideDialog}>OK</Button>
+                </Dialog.Actions>
+              </Dialog>
+            </Portal>
+
+            <AppSnackbar
+              visible={successVisible}
+              onDismiss={() => setSuccessVisible(false)}
+              message={successMessage}
+              type="success"
+              duration={2500}
+            />
+
+            <AppSnackbar
               visible={showTagLimit}
               onDismiss={() => setShowTagLimit(false)}
-              duration={2000}
-            >
-              Maximum 3 categories allowed
-            </Snackbar>
+              message="Maximum 3 categories allowed"
+              type="neutral"
+            />
           </View>
         }
       />
-    <Button 
-      mode="contained"
-      style={{ margin: 8, width: "90%", alignSelf: 'center', borderRadius: 16, height: 45, justifyContent: 'center' }} 
-      onPress={() => {handleSubmit()}}
-    >
-      Submit
-    </Button>
-    <Portal>
-      <Dialog visible={dialogVisible} onDismiss={hideDialog}>
-        <Dialog.Title variant="bodyLarge" style={styles.header}>{dialogTitle}</Dialog.Title>
-        <Dialog.Content>
-          <Text variant="bodyMedium" style={styles.componentDescription}>{dialogMessage}</Text>
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button 
-            onPress={hideDialog}
-            style={{ margin: 16, fontSize: 20}}
-          >
-              OK
-          </Button>
-        </Dialog.Actions>
-      </Dialog>
-    </Portal>
-    <Snackbar
-      visible={successVisible}
-      onDismiss={() => setSuccessVisible(false)}
-      duration={2500}
-      style={{ backgroundColor: '#2e7d32' }}
-    >
-      {successMessage}
-    </Snackbar>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-  },
-  keyboardView: {
-    flex: 1,
+  keyboardView: { flex: 1 },
+  content: {
+    padding: 16
   },
   header: {
-    marginBottom: 16,
-    fontWeight: '600',
-  },
-  segmentedButtons: {
-    marginBottom: 24,
-  },
-  input: {
-    marginBottom: 16,
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 0
-  },
-  descriptionInput: {
-    marginBottom: 16,
-    minHeight: 140,
+    marginBottom: 10
   },
   label: {
-    marginBottom: 4,
+    marginTop: 16,
+    marginBottom: 4
   },
-  componentDescription: {
-    marginBottom: 20,
-    color: '#49454F',
+  input: {
+    marginBottom: 16
   },
-  imageContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-    width: '100%',
-    height: 180,
-  },
-  infoBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E3E2E6',
-    padding: 12,
-    borderRadius: 8,
+  descriptionInput: {
+    height: 110,
+    marginBottom: 16
   },
   rentalPriceContainer: {
-    marginBottom: 16,
-    marginTop: 16,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    width: '100%',
-    height: 80,
-  },
-  rentalPriceItem: {
-    flex: 1,
-    margin: 4,
-    width: '40%'
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 16
   },
   chipContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 32,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginVertical: 12
   },
   chip: {
     margin: 4,
-    borderColor: '#6750A4',
+    borderColor: "#6750A4"
   },
   chipSelected: {
-    backgroundColor: 'rgba(103,80,164,0.16)',
-    borderColor: '#6750A4',
+    backgroundColor: "rgba(103,80,164,0.16)",
+    borderColor: "#6750A4"
   },
   chipSelectedText: {
-    color: '#000000',
+    color: "#000"
   },
+  submitButton: {
+    marginVertical: 20,
+    borderRadius: 12,
+    height: 48,
+    justifyContent: "center"
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center"
+  }
 });

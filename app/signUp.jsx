@@ -3,7 +3,8 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
-import { Button, Dialog, Portal, Snackbar, Text, TextInput } from "react-native-paper";
+import { Button, Dialog, Portal, Text, TextInput } from "react-native-paper";
+import AppSnackbar from "../components/Snackbar";
 import { auth, db } from "../firebaseConfig";
 
 export default function SignUp() {
@@ -207,6 +208,13 @@ export default function SignUp() {
         >
           {successMessage}
         </Snackbar>
+        <AppSnackbar
+          visible={successVisible}
+          onDismiss={() => setSuccessVisible(false)}
+          message={successMessage}
+          type="success"
+          duration={2500}
+        />
       </KeyboardAvoidingView>
     </>
   );

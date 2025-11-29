@@ -13,43 +13,38 @@ import {
 } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
   StyleSheet,
-  View,
+  View
 } from "react-native";
 import { GiftedChat } from "react-native-gifted-chat";
-import { ActivityIndicator, Button, Dialog, IconButton, Portal, Text } from "react-native-paper";
+import {
+  ActivityIndicator,
+  Button,
+  Dialog,
+  IconButton,
+  Portal,
+  Text,
+} from "react-native-paper";
 import { auth, db } from "../../firebaseConfig";
 
 export default function ChatScreen() {
-  const params = useLocalSearchParams();
   const router = useRouter();
-
-  const chatId = params.chatId;
-  const otherUserId = params.otherUserId;
-  const otherUserName = params.otherUserName;
-  const postId = params.postId;
-  const productTitle = params.productTitle;
+  const params = useLocalSearchParams();
+  const { chatId, otherUserId, otherUserName, postId, productTitle } = params;
 
   const firebaseUser = auth.currentUser;
 
   const [messages, setMessages] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
+  const [userName, setUserName] = useState("");
   const [post, setPost] = useState(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showUnpaidDialog, setShowUnpaidDialog] = useState(false);
 
   useEffect(() => {
     if (!firebaseUser) return;
-
-    const load = async () => {
-      const ref = doc(db, "users", firebaseUser.uid);
-      const snap = await getDoc(ref);
-      if (snap.exists()) setUserProfile(snap.data());
-    };
-
-    load();
+    const ref = doc(db, "users", firebaseUser.uid);
+    getDoc(ref).then((snap) => {
+      if (snap.exists()) setUserName(snap.data().name);
+    });
   }, []);
 
   useEffect(() => {
@@ -57,9 +52,7 @@ export default function ChatScreen() {
 
     const ref = doc(db, "posts", postId);
     const unsub = onSnapshot(ref, (snap) => {
-      if (!snap.exists()) return;
-      const data = snap.data();
-      setPost({ id: postId, ...data });
+      snap.exists() && setPost({ id: snap.id, ...snap.data() });
     });
 
     return unsub;
@@ -71,20 +64,21 @@ export default function ChatScreen() {
     const ref = collection(db, "chats", chatId, "messages");
     const q = query(ref, orderBy("createdAt", "desc"));
 
+    const mapMessage = (d) => {
+      const data = d.data();
+      return {
+        _id: d.id,
+        text: data.text,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        user: {
+          _id: data.senderId,
+          name: data.senderName || "User",
+        },
+      };
+    };
+
     const unsub = onSnapshot(q, (snapshot) => {
-      const list = snapshot.docs.map((docSnap) => {
-        const data = docSnap.data();
-        return {
-          _id: docSnap.id,
-          text: data.text,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          user: {
-            _id: data.senderId,
-            name: data.senderName || "User",
-          },
-        };
-      });
-      setMessages(list);
+      setMessages(snapshot.docs.map(mapMessage));
     });
 
     return unsub;
@@ -93,12 +87,12 @@ export default function ChatScreen() {
   const handleSend = useCallback(
     async (msgs = []) => {
       const msg = msgs[0];
-      if (!msg || !msg.text.trim()) return;
+      if (!msg?.text.trim()) return;
 
       await addDoc(collection(db, "chats", chatId, "messages"), {
         text: msg.text.trim(),
         senderId: firebaseUser.uid,
-        senderName: userProfile.name,
+        senderName: userName,
         createdAt: serverTimestamp(),
       });
 
@@ -111,15 +105,32 @@ export default function ChatScreen() {
         { merge: true }
       );
     },
-    [firebaseUser, userProfile]
+    [firebaseUser, userName]
   );
 
-  const handleReserveBuyer = async () => {
-    try {
-      const postRef = doc(db, "posts", postId);
+  const isSeller = post?.userId === firebaseUser?.uid;
+  const isBuyer = post?.reservedFor === firebaseUser?.uid;
+  const isReserved = post?.status === "reserved";
 
+  const getInfoMessage = () => {
+    if (!post) return null;
+    if (post.status === "reserved") {
+      if (isSeller) return `You have reserved this item for ${otherUserName}.`;
+      if (isBuyer) return "This item has been reserved for you.";
+      return "This item has been reserved for another person.";
+    }
+    if (post.status === "exchanged") return "The product has been delivered.";
+    if (post.status === "completed")
+      return "The product has been delivered and the payment has been completed.";
+    if (post.status === "unpaid")
+      return "The product has been delivered but the payment is pending.";
+    return null;
+  };
+
+  const reserveItem = async () => {
+    try {
       await setDoc(
-        postRef,
+        doc(db, "posts", postId),
         {
           status: "reserved",
           reservedFor: otherUserId,
@@ -127,27 +138,16 @@ export default function ChatScreen() {
         },
         { merge: true }
       );
-
-      setPost((prev) => ({
-        ...prev,
-        status: "reserved",
-        reservedFor: otherUserId,
-      }));
     } catch {
       alert("Error reserving item.");
     }
   };
 
-  const handleCancelReservation = () => {
-    setShowCancelDialog(true);
-  };
-
-  const confirmCancelReservation = async () => {
+  const cancelReservation = async () => {
     setShowCancelDialog(false);
     try {
-      const postRef = doc(db, "posts", postId);
       await setDoc(
-        postRef,
+        doc(db, "posts", postId),
         {
           status: "available",
           reservedFor: null,
@@ -155,35 +155,41 @@ export default function ChatScreen() {
         },
         { merge: true }
       );
-
-      setPost((prev) => ({
-        ...prev,
-        status: "available",
-        reservedFor: null,
-      }));
     } catch {
       alert("Error canceling reservation.");
     }
   };
 
-  const renderCustomAvatar = (props) => (
-    <Ionicons
-      name="person-circle-outline"
-      size={32}
-      color={props.position === "left" ? "#999" : "#4b7bec"}
-      style={{ marginLeft: props.position === "left" ? 0 : 4 }}
-    />
-  );
+  const goToSellerQR = () => {
+    router.replace({
+      pathname: "/MeetupQRCode",
+      params: { postId, buyerId: otherUserId },
+    });
+  };
 
-  useEffect(() => {
-    if (post && post.status === "unpaid" && post.reservedFor === firebaseUser.uid) {
-      setShowUnpaidDialog(true);
-    } else {
-      setShowUnpaidDialog(false);
-    }
-  }, [post, firebaseUser]);
+  const goToScanQR = () => {
+    router.replace({
+      pathname: "/ScanMeetup",
+      params: { chatId, otherUserId, otherUserName, postId, productTitle },
+    });
+  };
 
-  if (!messages || !userProfile || !post) {
+  const retryPayment = () => {
+    router.replace({
+      pathname: "/Checkout",
+      params: {
+        chatId,
+        otherUserId,
+        otherUserName,
+        productTitle,
+        postId,
+        price: post.sellingPrice || post.rentalPriceDeposit || 0,
+        sellerId: post.userId,
+      },
+    });
+  };
+
+  if (!messages || !post) {
     return (
       <View style={styles.center}>
         <ActivityIndicator />
@@ -191,156 +197,99 @@ export default function ChatScreen() {
     );
   }
 
-  const isSeller = post.userId === firebaseUser.uid;
-  const isReserved = post.status === "reserved";
+  const infoMessage = getInfoMessage();
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={120}
-    >
+    //<KeyboardAvoidingView
+      //style={{ flex: 1 }}
+      //behavior={Platform.OS === "ios" ? "padding" : "height"}
+      //keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+    //>
+    <View style={{ flex: 1 }}>
       <View style={styles.header}>
         <Ionicons name="person-circle-outline" size={42} color="#777" />
-        <View
-          style={{ flexDirection: "row", justifyContent: "space-between", flex: 1 }}
-        >
+
+        <View style={{ flexDirection: "row", justifyContent: "space-between", flex: 1 }}>
           <View style={{ marginLeft: 10 }}>
             <Text style={styles.username}>{otherUserName}</Text>
             <Text style={styles.product}>{productTitle}</Text>
           </View>
 
           {isSeller && post.status === "available" && (
-            <Button
-              mode="contained"
-              style={{ paddingHorizontal: 10, borderRadius: 8 }}
-              onPress={handleReserveBuyer}
-            >
+            <Button mode="contained" onPress={reserveItem} style={styles.smallBtn}>
               Reserve
             </Button>
           )}
 
-          {isSeller && isReserved && post.reservedFor === otherUserId && (
-            <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "flex-end" }}>
+          {isSeller && isReserved && (
+            <View style={styles.rightActions}>
               <Ionicons
                 name="qr-code-outline"
                 size={32}
                 color="#4b7bec"
-                style={{ marginHorizontal: 12, marginRight: 24, alignSelf: "center" }}
-                onPress={() => {
-                  if (postId && otherUserId) {
-                    router.push({
-                      pathname: "/MeetupQRCode",
-                      params: { postId, buyerId: otherUserId },
-                    });
-                  } else {
-                    alert("QR code data is missing.");
-                  }
-                }}
+                style={styles.qrIcon}
+                onPress={goToSellerQR}
               />
-              <IconButton
-                mode="contained"
-                icon="close"
-                style={{ borderRadius: 8 }}
-                onPress={handleCancelReservation}
-              />
+              <IconButton icon="close" onPress={() => setShowCancelDialog(true)} />
             </View>
           )}
 
-          {isReserved && post.reservedFor === firebaseUser.uid && (
+          {isReserved && isBuyer && (
             <Ionicons
               name="scan-outline"
               size={32}
               color="#4b7bec"
-              style={{ marginLeft: 12, alignSelf: "center" }}
-              onPress={() => {
-                router.push("/ScanMeetup");
-              }}
+              style={styles.qrIcon}
+              onPress={goToScanQR}
             />
+          )}
+
+          {post.status === "unpaid" && isBuyer && (
+            <Button mode="contained" onPress={retryPayment}>
+              Retry Payment
+            </Button>
           )}
         </View>
       </View>
 
-      {(isReserved || post.status === "exchanged") && (
+      {infoMessage && (
         <View style={styles.infoBox}>
           <Ionicons name="information-circle-outline" size={20} color="#555" />
-
-          {isSeller && post.reservedFor === otherUserId && post.status === "reserved" && (
-            <Text style={styles.infoText}>
-              You have reserved this item for {otherUserName}.
-            </Text>
-          )}
-
-          {!isSeller && post.reservedFor === firebaseUser.uid && post.status === "reserved" && (
-            <Text style={styles.infoText}>This item has been reserved for you.</Text>
-          )}
-
-          {!isSeller && post.reservedFor !== firebaseUser.uid && post.status === "reserved" && (
-            <Text style={styles.infoText}>
-              This item has been reserved for another person.
-            </Text>
-          )}
-
-          {!isSeller && post.reservedFor === firebaseUser.uid && post.status === "exchanged" && (
-            <Text style={styles.infoText}>The product has been delivered.</Text>
-          )}
-
-          {isSeller && post.status === "exchanged" && (
-            <Text style={styles.infoText}>The product has been delivered.</Text>
-          )}
-          {isSeller && post.status === "completed" && (
-            <Text style={styles.infoText}>The product has been delivered and the payment has been completed.</Text>
-          )}
-          {!isSeller && post.reservedFor === firebaseUser.uid && post.status === "completed" && (
-            <Text style={styles.infoText}>The product has been delivered.</Text>
-          )}
-          {isSeller && post.status === "unpaid" && (
-            <Text style={styles.infoText}>The product has been delivered but the payment is pending.</Text>
-          )}
-          {!isSeller && post.reservedFor === firebaseUser.uid && post.status === "unpaid" && (
-            <Text style={styles.infoText}>The product has been delivered but your payment is pending.</Text>
-          )}
+          <Text style={styles.infoText}>{infoMessage}</Text>
         </View>
       )}
 
-      <View style={{ flex: 1 }}>
-        <GiftedChat
-          messages={messages}
-          onSend={(msgs) => handleSend(msgs)}
-          user={{
-            _id: firebaseUser.uid,
-            name: userProfile?.name || "You",
-          }}
-          renderAvatar={renderCustomAvatar}
-          renderAvatarOnTop
-          renderUsernameOnMessage
-          bottomOffset={20}
-          placeholder="Type a message…"
-          alwaysShowSend
-        />
-        <Portal>
-          <Dialog visible={showCancelDialog} onDismiss={() => setShowCancelDialog(false)}>
-            <Dialog.Title>Cancel Reservation</Dialog.Title>
-            <Dialog.Content>
-              <Text>Are you sure you want to cancel this reservation? </Text>
-            </Dialog.Content>
-            <Dialog.Actions>
-              <Button onPress={() => setShowCancelDialog(false)} mode="text">No</Button>
-              <Button onPress={confirmCancelReservation} style={{borderRadius: 8, paddingHorizontal: 10}} mode="contained" >Yes</Button>
-            </Dialog.Actions>
-          </Dialog>
-          <Dialog visible={showUnpaidDialog} onDismiss={() => setShowUnpaidDialog(false)}>
-            <Dialog.Title>Payment Pending</Dialog.Title>
-            <Dialog.Content>
-              <Text>Your payment is pending. Please retry payment.</Text>
-            </Dialog.Content>
-            <Dialog.Actions>
-              <Button onPress={() => setShowUnpaidDialog(false)} mode="contained">OK</Button>
-            </Dialog.Actions>
-          </Dialog>
-        </Portal>
-      </View>
-    </KeyboardAvoidingView>
+      <GiftedChat
+        messages={messages}
+        onSend={(msgs) => handleSend(msgs)}
+        user={{
+          _id: firebaseUser.uid,
+          name: userName || "You",
+        }}
+        renderAvatar={() => (
+          <Ionicons name="person-circle-outline" size={32} color="#999" />
+        )}
+        renderUsernameOnMessage
+        placeholder="Type a message…"
+        alwaysShowSend
+      />
+
+      <Portal>
+        <Dialog visible={showCancelDialog} onDismiss={() => setShowCancelDialog(false)}>
+          <Dialog.Title>Cancel Reservation</Dialog.Title>
+          <Dialog.Content>
+            <Text>Are you sure you want to cancel this reservation?</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowCancelDialog(false)}>No</Button>
+            <Button mode="contained" onPress={cancelReservation}>
+              Yes
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+    </View>
+    //</KeyboardAvoidingView>
   );
 }
 
@@ -354,35 +303,21 @@ const styles = StyleSheet.create({
     borderBottomColor: "#eee",
     flexDirection: "row",
     alignItems: "center",
-    zIndex: 10,
   },
-  username: {
-    fontWeight: "bold",
-    fontSize: 18,
-    color: "#222",
-  },
-  product: {
-    fontSize: 14,
-    color: "#666",
-  },
+  username: { fontWeight: "bold", fontSize: 18, color: "#222" },
+  product: { fontSize: 14, color: "#666" },
   infoBox: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#f1f1f5",
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderBottomWidth: 1,
     borderBottomColor: "#ddd",
+    borderBottomWidth: 1,
   },
-  infoText: {
-    marginLeft: 10,
-    fontSize: 14,
-    color: "#555",
-    flexShrink: 1,
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  infoText: { marginLeft: 10, fontSize: 14, color: "#555", flexShrink: 1 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  smallBtn: { paddingHorizontal: 10, borderRadius: 8 },
+  rightActions: { flexDirection: "row", alignItems: "center" },
+  qrIcon: { marginHorizontal: 12 },
 });

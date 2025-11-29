@@ -1,86 +1,90 @@
-import {
-  CameraView,
-  useCameraPermissions,
-} from "expo-camera";
-import { useRouter } from "expo-router";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity, View
-} from "react-native";
-import { Snackbar } from "react-native-paper";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import AppSnackbar from "../components/Snackbar";
 
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  serverTimestamp,
-  setDoc,
-  where,
-} from "firebase/firestore";
-
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
 
 export default function ScanMeetup() {
+  const params = useLocalSearchParams();
+  const router = useRouter();
+
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
-  const [snackbar, setSnackbar] = useState({ visible: false, message: "" });
-  const [scanError, setScanError] = useState(false);
-  const router = useRouter();
+  const [snackbar, setSnackbar] = useState({
+    visible: false,
+    message: "",
+    type: "neutral",
+  });
 
   const firebaseUser = auth.currentUser;
 
   useEffect(() => {
-    if (permission && !permission.granted) {
-      requestPermission();
-    }
+    if (permission && !permission.granted) requestPermission();
   }, [permission]);
 
-  const showSnackbar = (message, isError = true) => {
-    setSnackbar({ visible: true, message });
-    setScanError(isError);
+  const showSnackbar = (message, type = "neutral") =>
+    setSnackbar({ visible: true, message, type });
+
+  const computePrice = (post) => {
+    if (post.postType === "rent") {
+      return Number(post.rentalPriceDeposit) || 0;
+    }
+    if (post.postType === "sell") {
+      return Number(post.sellingPrice);
+    }
+    return 0;
   };
 
   const handleBarCodeScanned = async ({ data }) => {
     setScanned(true);
-    setScanError(false);
 
     try {
-      const qr = JSON.parse(data);
+      if (!firebaseUser) return showSnackbar("You must be signed in.", "failure");
 
-      if (qr.type !== "meetupConfirmation") {
-        showSnackbar("Invalid QR type.");
-        return;
-      }
+      const qr = JSON.parse(data);
+      if (qr.type !== "meetupConfirmation")
+        return showSnackbar("Invalid QR code.", "failure");
 
       const { postId, buyerId, sellerId } = qr;
 
-      if (!firebaseUser) {
-        showSnackbar("You must be signed in to confirm a meetup.");
-        return;
-      }
-
-      if (firebaseUser.uid !== buyerId) {
-        showSnackbar("This QR code is not assigned to you.");
-        return;
-      }
+      if (firebaseUser.uid !== buyerId)
+        return showSnackbar("This QR code is not assigned to you.", "failure");
 
       const ref = doc(db, "posts", postId);
       const snap = await getDoc(ref);
-
-      if (!snap.exists()) {
-        showSnackbar("Post not found.");
-        return;
-      }
+      if (!snap.exists()) return showSnackbar("Post not found.", "failure");
 
       const post = snap.data();
 
-      if (post.reservedFor !== firebaseUser.uid) {
-        showSnackbar("This item is not reserved for you.");
-        return;
+      if (post.reservedFor !== firebaseUser.uid)
+        return showSnackbar("This item is not reserved for you.", "failure");
+
+      const price = computePrice(post);
+      const isFree =
+        post.postType === "donate" ||
+        (post.postType === "rent" && price === 0);
+
+      if (isFree) {
+        await setDoc(
+          ref,
+          {
+            status: "completed",
+            completedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+
+        showSnackbar("Meetup confirmed.", "success");
+
+        return setTimeout(() => {
+          router.replace({
+            pathname: `/chats/${params.chatId}`,
+            params,
+          });
+        }, 1200);
       }
 
       await setDoc(
@@ -92,37 +96,21 @@ export default function ScanMeetup() {
         { merge: true }
       );
 
-      showSnackbar("Meetup confirmed. Item marked as exchanged.", false);
+      showSnackbar("Meetup confirmed. Proceeding to payment...", "success");
 
-      setTimeout(async () => {
-        const chatsRef = collection(db, "chats");
-        const q = query(
-          chatsRef,
-          where("participants", "array-contains", buyerId),
-          where("listingId", "==", postId)
-        );
-
-        const chatSnap = await getDocs(q);
-        let chatId = null;
-
-        chatSnap.forEach((docSnap) => {
-          const chat = docSnap.data();
-          if (chat.participants.includes(sellerId)) {
-            chatId = docSnap.id;
-          }
+      setTimeout(() => {
+        router.replace({
+          pathname: "Checkout",
+          params: {
+            ...params,
+            price,
+            sellerId,
+            postType: post.postType,
+          },
         });
-
-          router.replace({
-            pathname: "Checkout",
-            params: {
-              postId,
-              price: post.sellingPrice,
-              sellerId
-            },
-          });
       }, 1200);
-    } catch (e) {
-      showSnackbar("Invalid QR code.");
+    } catch {
+      showSnackbar("Invalid QR code.", "failure");
     }
   };
 
@@ -149,44 +137,33 @@ export default function ScanMeetup() {
     <View style={styles.container}>
       <CameraView
         style={StyleSheet.absoluteFillObject}
-        barcodeScannerSettings={{
-          barCodeTypes: ["qr"],
-        }}
+        barcodeScannerSettings={{ barCodeTypes: ["qr"] }}
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
       />
 
       {scanned && (
         <TouchableOpacity
           style={styles.button}
-          onPress={() => {
-            setScanned(false);
-            setScanError(false);
-          }}
+          onPress={() => setScanned(false)}
         >
           <Text style={styles.buttonText}>Scan Again</Text>
         </TouchableOpacity>
       )}
 
-      <Snackbar
+      <AppSnackbar
         visible={snackbar.visible}
+        type={snackbar.type}
+        message={snackbar.message}
         onDismiss={() => setSnackbar({ ...snackbar, visible: false })}
         duration={3000}
-      >
-        {snackbar.message}
-      </Snackbar>
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  container: { flex: 1 },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
   button: {
     position: "absolute",
     bottom: 40,
@@ -196,8 +173,5 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
   },
-  buttonText: {
-    color: "white",
-    fontSize: 16,
-  },
+  buttonText: { color: "white", fontSize: 16 },
 });

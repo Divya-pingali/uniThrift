@@ -4,14 +4,24 @@ import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { useState } from "react";
 import { View } from "react-native";
-import { Button, Snackbar, Text } from "react-native-paper";
+import { Button, Card, Dialog, Portal, Text } from "react-native-paper";
 import { auth, db, functions } from "../firebaseConfig";
 
 export default function Checkout() {
-  const { postId, price, sellerId, chatId } = useLocalSearchParams();
+  const {
+    postId,
+    price,
+    sellerId,
+    chatId,
+    otherUserId,
+    otherUserName,
+    productTitle,
+  } = useLocalSearchParams();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState("");
+  const [showPaymentFailedDialog, setShowPaymentFailedDialog] = useState(false);
+  const [paymentFailedMsg, setPaymentFailedMsg] = useState("");
   const router = useRouter();
 
   const showSnackbar = (msg) => {
@@ -21,9 +31,18 @@ export default function Checkout() {
 
   const redirectToChat = () => {
     if (chatId) {
-      router.replace(`/chats/${chatId}`);
+      router.replace({
+        pathname: `/chats/${chatId}`,
+        params: {
+          chatId,
+          otherUserId,
+          otherUserName,
+          postId,
+          productTitle,
+        },
+      });
     } else {
-      router.replace("/chats");
+      router.back();
     }
   };
 
@@ -33,8 +52,13 @@ export default function Checkout() {
       const res = await createPI({ amount: Math.round(price * 100) });
 
       if (res.data.error) {
-        showSnackbar(res.data.error);
-        setTimeout(redirectToChat, 1800);
+        setPaymentFailedMsg(res.data.error);
+        setShowPaymentFailedDialog(true);
+        await setDoc(
+          doc(db, "posts", postId),
+          { status: "unpaid" },
+          { merge: true }
+        );
         return;
       }
 
@@ -46,21 +70,26 @@ export default function Checkout() {
       });
 
       if (init.error) {
-        showSnackbar(init.error.message);
-        setTimeout(redirectToChat, 1800);
+        setPaymentFailedMsg(init.error.message);
+        setShowPaymentFailedDialog(true);
+        await setDoc(
+          doc(db, "posts", postId),
+          { status: "unpaid" },
+          { merge: true }
+        );
         return;
       }
 
       const result = await presentPaymentSheet();
 
       if (result.error) {
-        showSnackbar("Payment failed: " + result.error.message);
+        setPaymentFailedMsg("Payment failed: " + result.error.message);
+        setShowPaymentFailedDialog(true);
         await setDoc(
           doc(db, "posts", postId),
           { status: "unpaid" },
           { merge: true }
         );
-        setTimeout(() => redirectToChat(), 1800);
         return;
       }
 
@@ -80,33 +109,97 @@ export default function Checkout() {
       );
 
       showSnackbar("Payment successful!");
-      setTimeout(() => redirectToChat(), 1800); 
+      setTimeout(() => redirectToChat(), 1800);
     } catch (err) {
-      console.log("Error calling createPaymentIntent:", err);
-      showSnackbar("Error calling backend: " + err.message);
-      setTimeout(() => redirectToChat(), 1800); 
+      setPaymentFailedMsg("Error calling backend: " + err.message);
+      setShowPaymentFailedDialog(true);
+      await setDoc(
+        doc(db, "posts", postId),
+        { status: "unpaid" },
+        { merge: true }
+      );
     }
+  };
+
+  const handlePaymentFailedDialogOk = () => {
+    setShowPaymentFailedDialog(false);
+    redirectToChat();
   };
 
   return (
     <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 20, marginBottom: 20 }}>
-        Checkout
-      </Text>
-
-      <Text style={{ fontSize: 18 }}>Price: ${price}</Text>
-
-      <Button mode="contained" onPress={payNow} style={{ marginTop: 30 }}>
-        Pay Now
-      </Button>
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={3000}
-        action={{ label: 'OK', onPress: () => setSnackbarVisible(false) }}
+      <Card
+        style={{
+          alignItems: "center",
+          justifyContent: "center",
+          paddingVertical: 20,
+          borderRadius: 12,
+          elevation: 4,
+        }}
       >
-        {snackbarMsg}
-      </Snackbar>
+        <Text
+          variant="titleLarge"
+          style={{
+            fontWeight: "bold",
+            alignSelf: "center",
+            marginVertical: 20,
+          }}
+        >
+          Checkout
+        </Text>
+        <Card.Content>
+          <Text variant="bodyMedium" style={{ textAlign: "center" }}>
+            You are about to pay{" "}
+            <Text style={{ fontWeight: "bold" }}>${price}</Text> for{" "}
+            <Text style={{ fontWeight: "bold" }}>{productTitle}</Text> to{" "}
+            <Text style={{ fontWeight: "bold" }}>{otherUserName}</Text>.
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              width: "100%",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: 30,
+            }}
+          >
+            <Button
+              mode="outlined"
+              onPress={async () => {
+                await setDoc(
+                  doc(db, "posts", postId),
+                  { status: "unpaid" },
+                  { merge: true }
+                );
+                redirectToChat();
+              }}
+              style={{ width: "48%", marginTop: 10, borderRadius: 8 }}
+            >
+              Cancel
+            </Button>
+            <Button
+              mode="contained"
+              onPress={payNow}
+              style={{ width: "48%", marginTop: 10, borderRadius: 8 }}
+            >
+              Pay Now
+            </Button>
+          </View>
+        </Card.Content>
+      </Card>
+      <Portal>
+        <Dialog visible={showPaymentFailedDialog} onDismiss={handlePaymentFailedDialogOk}>
+          <Dialog.Title>Payment Failed</Dialog.Title>
+          <Dialog.Content>
+            <Text>{paymentFailedMsg || "Payment could not be completed."}</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={handlePaymentFailedDialogOk} mode="contained" style={{ borderRadius: 8, paddingHorizontal: 10 }}>
+              OK
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 }

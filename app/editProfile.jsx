@@ -3,8 +3,9 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
-import { Button, Dialog, Portal, Snackbar, Text, TextInput } from "react-native-paper";
+import { Button, Dialog, Portal, Text, TextInput } from "react-native-paper";
 import EditableImage from "../components/EditableImage";
+import AppSnackbar from "../components/Snackbar";
 import { auth, db, firebaseStorage } from "../firebaseConfig";
 
 export default function EditProfile() {
@@ -88,95 +89,101 @@ export default function EditProfile() {
 
   return (
     <>
-    <KeyboardAvoidingView
-      style={styles.keyboardView}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.headerContainer}>
-          <Text variant="headlineMedium" style={styles.header}>
-            Edit Profile
-          </Text>
-          <Text variant="titleMedium" style={styles.subHeader}>
-            Update your details below
-          </Text>
-        </View>
-        <View style={styles.form}>
-        <Text variant="titleMedium" style={styles.label}>Profile Picture</Text>
-        <View style={styles.imageContainer}>
-          <EditableImage
-            imageUri={userData.image}
-            setImageUri={(uri) => setUserData(prev => ({ ...prev, image: uri }))}
-            imagePath={imagePathRef.current}
-            editable={true}
-            style={styles.imageContainer}
-          />
-        </View>
-          <Text variant="titleMedium" style={styles.label}>Email</Text>
-          <View style={styles.emailContainer}>
-            <Text style={styles.emailText}>{userData.email}</Text>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <View style={styles.headerContainer}>
+            <Text variant="headlineMedium" style={styles.header}>
+              Edit Profile
+            </Text>
+            <Text variant="titleMedium" style={styles.subHeader}>
+              Update your details below
+            </Text>
           </View>
-          <Text variant="titleMedium" style={styles.label}>Name</Text>
-          <TextInput
-            mode="outlined"
-            placeholder="Name"
-            value={userData.name}
-            onChangeText={text => setUserData(prev => ({ ...prev, name: text }))}
-            style={styles.input}
+          <View style={styles.form}>
+            <Text variant="titleMedium" style={styles.label}>Profile Picture</Text>
+            <View style={styles.imageContainer}>
+              <EditableImage
+                imageUri={userData.image}
+                setImageUri={(uri) => setUserData(prev => ({ ...prev, image: uri }))}
+                imagePath={imagePathRef.current}
+                editable={true}
+                style={styles.imageContainer}
+              />
+            </View>
+            <Text variant="titleMedium" style={styles.label}>Email</Text>
+            <View style={styles.emailContainer}>
+              <Text style={styles.emailText}>{userData.email}</Text>
+            </View>
+            <Text variant="titleMedium" style={styles.label}>Name</Text>
+            <TextInput
+              mode="outlined"
+              placeholder="Name"
+              value={userData.name}
+              onChangeText={text => setUserData(prev => ({ ...prev, name: text }))}
+              style={styles.input}
+            />
+            <Text variant="titleMedium" style={styles.label}>Bio</Text>
+            <TextInput
+              mode="outlined"
+              placeholder="Bio"
+              value={userData.bio}
+              onChangeText={text => setUserData(prev => ({ ...prev, bio: text }))}
+              style={[styles.input, { minHeight: 80 }]}
+              multiline
+            />
+            <Text variant="titleMedium" style={styles.label}>Phone Number</Text>
+            <TextInput
+              mode="outlined"
+              placeholder="Phone Number"
+              value={userData.phone}
+              onChangeText={text => {
+                if (/^\d*$/.test(text)) {
+                  setUserData(prev => ({ ...prev, phone: text }));
+                }
+              }}
+              style={styles.input}
+              keyboardType="number-pad"
+              maxLength={15}
+            />
+            <Button
+              mode="contained"
+              onPress={handleSave}
+              style={styles.button}
+            >
+              Save Changes
+            </Button>
+          </View>
+          <Portal>
+            <Dialog visible={dialogVisible} onDismiss={hideDialog}>
+              <Dialog.Title variant="bodyLarge" style={styles.header}>{dialogTitle}</Dialog.Title>
+              <Dialog.Content>
+                <Text variant="bodyMedium" style={styles.componentDescription}>{dialogMessage}</Text>
+              </Dialog.Content>
+              <Dialog.Actions>
+                <Button onPress={hideDialog} style={{ margin: 16, fontSize: 20 }}>OK</Button>
+              </Dialog.Actions>
+            </Dialog>
+          </Portal>
+          <Snackbar
+            visible={successVisible}
+            onDismiss={() => setSuccessVisible(false)}
+            duration={2500}
+            style={{ backgroundColor: '#2e7d32' }}
+          >
+            {successMessage}
+          </Snackbar>
+          <AppSnackbar
+            visible={successVisible}
+            onDismiss={() => setSuccessVisible(false)}
+            message={successMessage}
+            type="success"
+            duration={2500}
           />
-          <Text variant="titleMedium" style={styles.label}>Bio</Text>
-          <TextInput
-            mode="outlined"
-            placeholder="Bio"
-            value={userData.bio}
-            onChangeText={text => setUserData(prev => ({ ...prev, bio: text }))}
-            style={[styles.input, { minHeight: 80 }]}
-            multiline
-          />
-          <Text variant="titleMedium" style={styles.label}>Phone Number</Text>
-          <TextInput
-            mode="outlined"
-            placeholder="Phone Number"
-            value={userData.phone}
-            onChangeText={text => {
-              if (/^\d*$/.test(text)) {
-                setUserData(prev => ({ ...prev, phone: text }));
-              }
-            }}
-            style={styles.input}
-            keyboardType="number-pad"
-            maxLength={15}
-          />
-        </View>
-        <Portal>
-          <Dialog visible={dialogVisible} onDismiss={hideDialog}>
-            <Dialog.Title variant="bodyLarge" style={styles.header}>{dialogTitle}</Dialog.Title>
-            <Dialog.Content>
-              <Text variant="bodyMedium" style={styles.componentDescription}>{dialogMessage}</Text>
-            </Dialog.Content>
-            <Dialog.Actions>
-              <Button onPress={hideDialog} style={{ margin: 16, fontSize: 20 }}>OK</Button>
-            </Dialog.Actions>
-          </Dialog>
-        </Portal>
-        <Snackbar
-          visible={successVisible}
-          onDismiss={() => setSuccessVisible(false)}
-          duration={2500}
-          style={{ backgroundColor: '#2e7d32' }}
-        >
-          {successMessage}
-        </Snackbar>
-      </ScrollView>
-    </KeyboardAvoidingView>
-    <Button 
-      mode="contained" 
-      onPress={handleSave} 
-      style={styles.button}
-      disabled={loading}
-    >
-      Save Changes
-    </Button>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }

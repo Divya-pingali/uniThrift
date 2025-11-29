@@ -28,10 +28,12 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.divyapingali.unithrift",
-      "googleServicesFile": "./google-services.json"
-    },
+        "googleServicesFile": "./google-services.json",
+        "softwareKeyboardLayoutMode": "resize",
+        "windowSoftInputMode": "adjustResize"
+      },
 
-    "web": {
+      "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
