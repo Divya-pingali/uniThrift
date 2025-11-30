@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Dimensions, Pressable, ScrollView, View } from "react-native";
 import { FAB, Text, useTheme } from "react-native-paper";
 import PostCard from "../../components/PostCard";
+import CATEGORY_COLORS from "../../constants/categoryColors";
 import { auth, db } from "../../firebaseConfig";
 
 export default function Home() {
@@ -15,15 +16,14 @@ export default function Home() {
 
   const screenWidth = Dimensions.get("window").width;
 
-  const categories = [
-    { display: "Clothing", firestore: "Clothing & Accessories", color: "#6750A41A", icon: "shirt-outline", iconColor: "#6750A4" },
-    { display: "Electronics", firestore: "Electronics", color: "#007AFF1A", icon: "phone-portrait-outline", iconColor: "#007AFF" },
-    { display: "Furniture", firestore: "Furniture", color: "#CD5C5C1A", icon: "bed-outline", iconColor: "#CD5C5C" },
-    { display: "Kitchenware", firestore: "Kitchenware", color: "#FF8C001A", icon: "cafe-outline", iconColor: "#FF8C00" },
-    { display: "Study Supplies", firestore: "Study Supplies", color: "#32CD321A", icon: "book-outline", iconColor: "#32CD32" },
-    { display: "Personal Care", firestore: "Personal Care", color: "#DA70D61A", icon: "sparkles-outline", iconColor: "#DA70D6" },
-    { display: "Appliances", firestore: "Appliances", color: "#0080801A", icon: "home-outline", iconColor: "#008080" },
-  ];
+  const categories = Object.entries(CATEGORY_COLORS).map(([key, value]) => ({
+    display: key,
+    firestore: key,
+    color: value.color,
+    icon: value.icon,
+    iconColor: value.iconColor,
+    textColor: value.textColor,
+  }));
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -138,7 +138,7 @@ export default function Home() {
                   }}
                 >
                   <Ionicons name={cat.icon} size={32} color={cat.iconColor} />
-                  <Text style={{ color: cat.iconColor, fontWeight: "bold", marginTop: 8, textAlign: "center" }}>
+                  <Text style={{ color: cat.textColor, fontWeight: "bold", marginTop: 8, textAlign: "center" }}>
                     {cat.display}
                   </Text>
                 </View>

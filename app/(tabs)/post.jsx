@@ -6,9 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, StyleSheet, View } from "react-native";
 import { Button, Chip, Dialog, Portal, SegmentedButtons, Text, TextInput, useTheme } from "react-native-paper";
 import { Dropdown } from 'react-native-paper-dropdown';
+import BackButton from "../../components/BackButton";
 import EditableImage from "../../components/EditableImage";
 import LocationSearch from "../../components/LocationSearch";
 import AppSnackbar from "../../components/Snackbar";
+import CATEGORY_COLORS from "../../constants/categoryColors";
 import { auth, db, firebaseStorage } from '../../firebaseConfig';
 
 export default function Post() {
@@ -17,15 +19,7 @@ export default function Post() {
   const imagePathRef = useRef(`posts/${Date.now()}.jpg`);
   const theme = useTheme();
   
-  const TAG_OPTIONS = [
-    'Electronics',
-    'Furniture',
-    'Kitchenware',
-    'Study Supplies',
-    'Clothing & Accessories',
-    'Appliances',
-    'Personal Care'
-  ];
+  const TAG_OPTIONS = Object.keys(CATEGORY_COLORS);
   const AVAILABILITY_OPTIONS = [
     { label: '1 month', value: '1 month' },
     { label: '3 months', value: '3 months' },
@@ -116,7 +110,7 @@ export default function Post() {
         ...prev,
         tags: isSelected
           ? prev.tags.filter((t) => t !== tag)
-          : [...prev.tags, tag]
+          : [tag, ...prev.tags.filter((t) => t !== tag)]
       };
     });
   };
@@ -253,9 +247,12 @@ export default function Post() {
         overScrollMode="never"
         ListHeaderComponent={
           <View style={styles.content}>
+            <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "flex-start" }}>
+              <BackButton fallback="/(tabs)/home"/>
             <Text variant="headlineMedium" style={styles.header}>
               {id ? 'Edit Listing' : 'New Listing'}
             </Text>
+            </View>
             <Text variant="bodyMedium" style={[styles.componentDescription, { color: theme.colors.onSurfaceVariant }]}
             >
               You have selected to {type} an item. Please provide the details below.

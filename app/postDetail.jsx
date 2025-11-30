@@ -8,6 +8,8 @@ import { Button, Divider, Text, useTheme } from "react-native-paper";
 import { db } from "../firebaseConfig";
 
 import { useRouter } from "expo-router";
+import BackButton from "../components/BackButton"; // Adjust path if needed
+import CATEGORY_COLORS from "../constants/categoryColors";
 import { auth } from "../firebaseConfig";
 
 
@@ -82,7 +84,6 @@ async function startChat() {
   const sellerId = post.userId;
   const listingId = post.id;
 
-  // Fetch seller's name
   const sellerDocRef = doc(db, "users", sellerId);
   const sellerDocSnap = await getDoc(sellerDocRef);
   const sellerName = sellerDocSnap.exists() ? sellerDocSnap.data().name : "Seller";
@@ -122,7 +123,7 @@ async function startChat() {
   router.push({
     pathname: "/chats/[chatId]",
     params: {
-      chatId,
+      chatId: chatId,
       otherUserName: sellerName,
       productTitle: post.title,
       postId: listingId, 
@@ -132,6 +133,11 @@ async function startChat() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", marginBottom: 32, paddingHorizontal: 24, paddingTop: 24 }}>
+        <BackButton fallback="/(tabs)/home" />
+        <Text variant="headlineMedium" style={{ fontWeight: "bold", marginLeft: 8 }}>Post Details</Text>
+      </View>
+
       {loading || !post ? (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.colors.background }}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -158,29 +164,36 @@ async function startChat() {
                 marginBottom: 12,
               }}
             >
-              {tags.map((tag, index) => (
-                <View
-                  key={index}
-                  style={{
-                    backgroundColor: theme.colors.surfaceVariant,
-                    borderRadius: 6,
-                    paddingVertical: 4,
-                    paddingHorizontal: 7,
-                    marginRight: 6,
-                  }}
-                >
-                  <Text
+              {tags.map((tag, index) => {
+                const category = CATEGORY_COLORS[tag];
+                const bgColor = category ? category.color : theme.colors.surfaceVariant;
+                const textColor = category ? category.textColor : "#FFFFFF";
+                return (
+                  <View
+                    key={index}
                     style={{
-                      fontSize: 9,
-                      fontWeight: "bold",
-                      color: theme.colors.onSurfaceVariant,
-                      textTransform: "uppercase",
+                      backgroundColor: bgColor,
+                      borderRadius: 6,
+                      paddingVertical: 4,
+                      paddingHorizontal: 7,
+                      marginRight: 6,
+                      flexDirection: "row",
+                      alignItems: "center",
                     }}
                   >
-                    {tag}
-                  </Text>
-                </View>
-              ))}
+                    <Text
+                      style={{
+                        fontSize: 9,
+                        fontWeight: "700",
+                        color: textColor,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {tag}
+                    </Text>
+                  </View>
+                );
+              })}
             </ScrollView>
           )}
 
@@ -246,7 +259,7 @@ async function startChat() {
             </View>
           </View>
             
-          <View style={{ backgroundColor: theme.colors.surfaceVariant, borderRadius: 8, padding: 12, marginTop: 4, marginBottom: 16 }}>
+          <View style={{ backgroundColor: theme.colors.surfaceContainerLow, borderRadius: 8, padding: 12, marginTop: 4, marginBottom: 16 }}>
             <Text variant="titleMedium" style={{ marginBottom: 4 }}>Item Description</Text>
             <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 22 }}>
               {post.description}
@@ -263,7 +276,7 @@ async function startChat() {
           )}
 
           { post.location && (
-            <View style={{ borderRadius: 8, backgroundColor: theme.colors.surfaceVariant, borderWidth: 0.2, borderColor: theme.colors.outline, overflow: "hidden", marginBottom: 16  }} elevation={4}>
+            <View style={{ borderRadius: 8, backgroundColor: theme.colors.surfaceContainerLow, borderWidth: 0.2, borderColor: theme.colors.outline, overflow: "hidden", marginBottom: 16  }} elevation={4}>
               <Pressable
                 onPress={() =>
                   Linking.openURL(

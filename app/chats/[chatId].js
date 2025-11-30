@@ -32,6 +32,7 @@ import {
   Text,
   useTheme,
 } from "react-native-paper";
+import BackButton from "../../components/BackButton"; // Adjust path if needed
 import { auth, db } from "../../firebaseConfig";
 
 export default function ChatScreen() {
@@ -211,6 +212,7 @@ export default function ChatScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={styles.header}>
+        <BackButton fallback="/(tabs)/chat" style={{padding: 0}} />
         <Ionicons
           name="person-circle-outline"
           size={42}
@@ -266,9 +268,9 @@ export default function ChatScreen() {
             />
           )}
 
-          {post.status === "unpaid" && isBuyer && (
-            <Button mode="contained" onPress={retryPayment}>
-              Retry Payment
+          {(post.status === "unpaid" || post.status === "exchanged") && isBuyer && (
+            <Button mode="contained" style={{borderRadius: 8}} onPress={retryPayment}>
+              Pay Now
             </Button>
           )}
         </View>
@@ -379,7 +381,7 @@ const makeStyles = (theme) =>
     header: {
       paddingTop: 40,
       paddingBottom: 10,
-      paddingHorizontal: 16,
+      paddingRight: 16,
       backgroundColor: theme.colors.surface,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.outlineVariant,

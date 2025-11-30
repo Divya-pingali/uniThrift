@@ -40,13 +40,13 @@ export default function Checkout() {
   const redirectToChat = () => {
     if (chatId) {
       router.replace({
-        pathname: `/chats/${chatId}`,
+        pathname: `/chats/[chatId]`,
         params: {
-          chatId,
-          otherUserId,
-          otherUserName,
-          postId,
-          productTitle,
+          chatId: chatId,
+          otherUserId: otherUserId,
+          otherUserName: otherUserName, 
+          postId: postId,
+          productTitle: productTitle,
         },
       });
     } else {

@@ -4,6 +4,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { useRef, useState } from "react";
 import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Dialog, Portal, Text, TextInput, useTheme } from "react-native-paper";
+import BackButton from "../components/BackButton";
 import AppSnackbar from "../components/Snackbar";
 import { auth, db } from "../firebaseConfig";
 
@@ -113,6 +114,9 @@ export default function SignUp() {
         style={styles.keyboardView}
         behavior={"height"}
       >
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start" }}>
+          <BackButton fallback="/login" />
+        </View>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.logoContainer}>
             <Text variant="headlineMedium" style={styles.header}>
@@ -231,7 +235,6 @@ const makeStyles = (theme) => StyleSheet.create({
     marginBottom: 24,
   },
   header: {
-    marginTop: 24,
     marginBottom: 8,
     fontWeight: "800",
     textAlign: "center",

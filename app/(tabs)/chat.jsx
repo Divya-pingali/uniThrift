@@ -17,6 +17,7 @@ import {
   Text,
   useTheme,
 } from "react-native-paper";
+import BackButton from "../../components/BackButton";
 import { auth, db } from "../../firebaseConfig";
 
 export default function ChatListScreen() {
@@ -48,7 +49,6 @@ export default function ChatListScreen() {
       setFilteredChats(items);
       setLoading(false);
 
-      // Load other user profiles
       const profilePromises = items.map(async (chat) => {
         const otherUserId = chat.participants.find(
           (uid) => uid !== firebaseUser.uid
@@ -134,32 +134,14 @@ export default function ChatListScreen() {
       </View>
     );
 
-  if (!chats || chats.length === 0)
-    return (
-      <View style={styles.container}>
+  return (
+    <View style={styles.container}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start" }}>
+        <BackButton fallback="/(tabs)/home" />
         <Text variant="headlineMedium" style={styles.title}>
           Chats
         </Text>
-        <Searchbar
-          placeholder="Search chats"
-          value={search}
-          onChangeText={handleSearch}
-          style={styles.searchbar}
-          inputStyle={{ color: theme.colors.onSurface }}
-          placeholderTextColor={theme.colors.onSurfaceVariant}
-          iconColor={theme.colors.primary}
-        />
-        <View style={styles.center}>
-          <Text>No conversations yet</Text>
-        </View>
       </View>
-    );
-
-  return (
-    <View style={styles.container}>
-      <Text variant="headlineMedium" style={styles.title}>
-        Chats
-      </Text>
       <Searchbar
         placeholder="Search chats"
         value={search}
@@ -169,79 +151,84 @@ export default function ChatListScreen() {
         placeholderTextColor={theme.colors.onSurfaceVariant}
         iconColor={theme.colors.primary}
       />
+      {(!chats || chats.length === 0) ? (
+        <View style={styles.center}>
+          <Text>No conversations yet</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredChats}
+          keyExtractor={(item) => item.id}
+          ItemSeparatorComponent={() => (
+            <View style={{ height: 1, backgroundColor: theme.colors.outlineVariant }} />
+          )}
+          renderItem={({ item }) => {
+            const otherUserId = item.participants.find(
+              (uid) => uid !== firebaseUser.uid
+            );
 
-      <FlatList
-        data={filteredChats}
-        keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => (
-          <View style={{ height: 1, backgroundColor: theme.colors.outlineVariant }} />
-        )}
-        renderItem={({ item }) => {
-          const otherUserId = item.participants.find(
-            (uid) => uid !== firebaseUser.uid
-          );
+            const otherUserName = userProfiles[otherUserId] || "User";
+            const postId = item.listingId;
 
-          const otherUserName = userProfiles[otherUserId] || "User";
-          const postId = item.listingId;
+            const productTitle = postId
+              ? productTitles[postId] || "Listing"
+              : item.listingName || "Listing";
 
-          const productTitle = postId
-            ? productTitles[postId] || "Listing"
-            : item.listingName || "Listing";
+            const lastMessage = item.lastMessage || "No messages yet";
 
-          const lastMessage = item.lastMessage || "No messages yet";
+            const time = item.lastMessageAt
+              ? new Date(item.lastMessageAt.seconds * 1000).toLocaleTimeString(
+                  [],
+                  { hour: "2-digit", minute: "2-digit" }
+                )
+              : "";
 
-          const time = item.lastMessageAt
-            ? new Date(item.lastMessageAt.seconds * 1000).toLocaleTimeString(
-                [],
-                { hour: "2-digit", minute: "2-digit" }
-              )
-            : "";
-
-          return (
-            <Pressable
-              onPress={() =>
-                router.push({
-                  pathname: "/chats/[chatId]",
-                  params: {
-                    chatId: item.id,
-                    otherUserId,
-                    otherUserName,
-                    postId,
-                    productTitle,
-                  },
-                })
-              }
-              style={({ pressed }) => [
-                styles.row,
-                pressed && { backgroundColor: theme.colors.surfaceDisabled },
-              ]}
-            >
-              <View style={styles.avatarContainer}>
-                <Ionicons
-                  name="person-circle"
-                  size={48}
-                  color={theme.colors.primary}
-                />
-              </View>
-
-              <View style={styles.content}>
-                <View style={styles.topRow}>
-                  <Text style={styles.name}>{otherUserName}</Text>
-                  <Text style={styles.time}>{time}</Text>
+            return (
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: "/chats/[chatId]",
+                    params: {
+                      chatId: item.id,
+                      otherUserId,
+                      otherUserName,
+                      postId,
+                      productTitle,
+                    },
+                  })
+                }
+                style={({ pressed }) => [
+                  styles.row,
+                  pressed && { backgroundColor: theme.colors.surfaceDisabled },
+                ]}
+              >
+                <View style={styles.avatarContainer}>
+                  <Ionicons
+                    name="person-circle"
+                    size={48}
+                    color={theme.colors.primary}
+                  />
                 </View>
 
-                <Text numberOfLines={1} style={styles.productTag}>
-                  {productTitle}
-                </Text>
+                <View style={styles.content}>
+                  <View style={styles.topRow}>
+                    <Text style={styles.name}>{otherUserName}</Text>
+                    <Text style={styles.time}>{time}</Text>
+                  </View>
 
-                <Text numberOfLines={1} style={styles.message}>
-                  {lastMessage}
-                </Text>
-              </View>
-            </Pressable>
-          );
-        }}
-      />
+                  <Text numberOfLines={1} style={styles.productTag}>
+                    {productTitle}
+                  </Text>
+
+                  <Text numberOfLines={1} style={styles.message}>
+                    {lastMessage}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          }}
+        />
+      )}
     </View>
   );
 }

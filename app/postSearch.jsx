@@ -11,6 +11,7 @@ import {
 import { useRef, useState } from "react";
 import { Dimensions, FlatList, Pressable, View } from "react-native";
 import { ActivityIndicator, Searchbar, Text, useTheme } from "react-native-paper";
+import BackButton from "../components/BackButton";
 import PostCard from "../components/PostCard";
 import { db } from "../firebaseConfig";
 
@@ -98,6 +99,12 @@ export default function PostSearchScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", marginBottom: 32, marginTop: 16 }}>
+        <BackButton fallback="/(tabs)/home" />
+        <Text variant="headlineMedium" style={{ fontWeight: "bold", marginLeft: 8 }}>
+          Search Posts
+        </Text>
+      </View>
       <Searchbar
         placeholder="Search posts…"
         value={search}

@@ -4,6 +4,7 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Dialog, Portal, Text, TextInput, useTheme } from "react-native-paper";
+import BackButton from "../components/BackButton"; // Make sure this import exists
 import EditableImage from "../components/EditableImage";
 import AppSnackbar from "../components/Snackbar";
 import { auth, db, firebaseStorage } from "../firebaseConfig";
@@ -92,6 +93,7 @@ export default function EditProfile() {
 
   return (
     <>
+      <BackButton fallback="/profile" />
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}

@@ -1,13 +1,16 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Text, useTheme } from "react-native-paper";
+import BackButton from "../components/BackButton";
 import AppSnackbar from "../components/Snackbar";
 
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
 
 export default function ScanMeetup() {
+  const theme = useTheme();
   const params = useLocalSearchParams();
   const router = useRouter();
 
@@ -135,6 +138,21 @@ export default function ScanMeetup() {
 
   return (
     <View style={styles.container}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          marginBottom: 32,
+          marginTop: 32,
+          zIndex: 10,
+        }}
+      >
+        <BackButton fallback="/(tabs)/chat" />
+        <Text variant="headlineSmall" style={{ fontWeight: "bold", marginLeft: 8 }}>
+          Scan Meetup
+        </Text>
+      </View>
       <CameraView
         style={StyleSheet.absoluteFillObject}
         barcodeScannerSettings={{ barCodeTypes: ["qr"] }}

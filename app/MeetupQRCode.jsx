@@ -1,7 +1,8 @@
 import { useLocalSearchParams } from "expo-router";
-import { Text, View } from "react-native";
-import { useTheme } from "react-native-paper";
+import { View } from "react-native";
+import { Text, useTheme } from "react-native-paper";
 import QRCode from "react-native-qrcode-svg";
+import BackButton from "../components/BackButton";
 import { auth } from "../firebaseConfig";
 
 export default function ShowMeetupQR() {
@@ -19,6 +20,25 @@ export default function ShowMeetupQR() {
           backgroundColor: theme.colors.background,
         }}
       >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "flex-start",
+          }}
+        >
+          <BackButton fallback="/(tabs)/chat" />
+          <Text
+            variant="headlineSmall"
+            style={{
+              fontWeight: "bold",
+              marginLeft: 8,
+              color: theme.colors.onBackground,
+            }}
+          >
+            Meetup QR
+          </Text>
+        </View>
         <Text style={{ color: theme.colors.error, fontSize: 16 }}>
           Missing QR code data. Please return to chat and try again.
         </Text>
@@ -37,27 +57,48 @@ export default function ShowMeetupQR() {
     <View
       style={{
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
         backgroundColor: theme.colors.background,
+        paddingTop: 32,
       }}
     >
-      <Text
+      <View
         style={{
-          marginBottom: 20,
-          fontSize: 18,
-          fontWeight: "600",
-          color: theme.colors.onBackground,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          paddingHorizontal: 16,
         }}
       >
-        Show this QR to the buyer
-      </Text>
-      <QRCode
-        value={qrData}
-        size={240}
-        color={theme.colors.onBackground}
-        backgroundColor={theme.colors.background}
-      />
+        <BackButton fallback="/(tabs)/chat" />
+        <Text
+          variant="headlineSmall"
+          style={{
+            fontWeight: "bold",
+            marginLeft: 8,
+            color: theme.colors.onBackground,
+          }}
+        >
+          Meetup QR
+        </Text>
+      </View>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text
+          style={{
+            marginBottom: 20,
+            fontSize: 18,
+            fontWeight: "600",
+            color: theme.colors.onBackground,
+          }}
+        >
+          Show this QR to the buyer
+        </Text>
+        <QRCode
+          value={qrData}
+          size={275}
+          color={theme.colors.onBackground}
+          backgroundColor={theme.colors.background}
+        />
+      </View>
     </View>
   );
 }

@@ -4,10 +4,12 @@ import { collection, getDocs } from "firebase/firestore";
 import { useEffect, useRef, useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
-import { Button, Text } from "react-native-paper";
+import { Button, Text, useTheme } from "react-native-paper";
+import BackButton from "../../components/BackButton";
 import { db } from "../../firebaseConfig";
 
 function MapScreen() {
+  const theme = useTheme();
   const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
@@ -17,7 +19,6 @@ function MapScreen() {
 
   const MAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-  // Group same-location posts for jitter
   const locationGroups = posts.reduce((acc, post) => {
     const key = `${post.location?.latitude},${post.location?.longitude}`;
     if (!acc[key]) acc[key] = [];
@@ -36,7 +37,6 @@ function MapScreen() {
     };
   }
 
-  // Fetch posts + geocode if needed
   useEffect(() => {
     const fetchPosts = async () => {
       const snap = await getDocs(collection(db, "posts"));
@@ -105,6 +105,29 @@ function MapScreen() {
 
   return (
     <View style={{ flex: 1 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          paddingTop: 24,
+          paddingHorizontal: 16,
+          backgroundColor: theme.colors.background,
+          zIndex: 10,
+        }}
+      >
+        <BackButton fallback="/(tabs)/home" />
+        <Text
+          style={{
+            fontWeight: "bold",
+            fontSize: 22,
+            marginLeft: 8,
+            color: theme.colors.onSurface,
+          }}
+        >
+          Map
+        </Text>
+      </View>
       <MapView
         ref={mapRef}
         style={StyleSheet.absoluteFill}

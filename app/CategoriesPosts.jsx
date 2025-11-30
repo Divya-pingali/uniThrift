@@ -13,7 +13,9 @@ import {
   View,
 } from "react-native";
 import { Chip, Text, useTheme } from "react-native-paper";
+import BackButton from "../components/BackButton"; // Add this import
 import PostCard from "../components/PostCard";
+import CATEGORY_COLORS from "../constants/categoryColors";
 import { db } from "../firebaseConfig";
 
 if (
@@ -33,15 +35,7 @@ export default function CategoriesPosts() {
   );
   const [posts, setPosts] = useState([]);
   const screenWidth = Dimensions.get("window").width;
-  const categories = [
-    "Electronics",
-    "Furniture",
-    "Kitchenware",
-    "Study Supplies",
-    "Clothing & Accessories",
-    "Appliances",
-    "Personal Care",
-  ];
+  const categories = Object.keys(CATEGORY_COLORS);
 
   useEffect(() => {
     const q = query(collection(db, "posts"), where("status", "==", "available"), orderBy("createdAt", "desc"));
@@ -84,15 +78,12 @@ export default function CategoriesPosts() {
 
   const renderHeader = () => (
     <>
-      <Text
-        variant="headlineMedium"
-        style={{
-          fontWeight: "bold",
-          marginTop: 24
-        }}
-      >
-        Browse
-      </Text>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", marginBottom: 20, marginTop: 16 }}>
+        <BackButton fallback="/(tabs)/home" />
+        <Text variant="headlineMedium" style={{ fontWeight: "bold" }}>
+          Browse
+        </Text>
+      </View>
       <Text
         variant="titleMedium"
         style={{
