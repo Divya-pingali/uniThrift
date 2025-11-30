@@ -44,7 +44,7 @@ export default function Checkout() {
         params: {
           chatId: chatId,
           otherUserId: otherUserId,
-          otherUserName: otherUserName, 
+          otherUserName: otherUserName,
           postId: postId,
           productTitle: productTitle,
         },
@@ -135,7 +135,9 @@ export default function Checkout() {
   };
 
   return (
-    <View style={{ padding: 20, flex: 1, backgroundColor: theme.colors.background }}>
+    <View
+      style={{ padding: 20, flex: 1, backgroundColor: theme.colors.background }}
+    >
       <Card
         style={{
           alignItems: "center",
@@ -160,7 +162,10 @@ export default function Checkout() {
         <Card.Content>
           <Text
             variant="bodyMedium"
-            style={{ textAlign: "center", color: theme.colors.onSurfaceVariant }}
+            style={{
+              textAlign: "center",
+              color: theme.colors.onSurfaceVariant,
+            }}
           >
             You are about to pay{" "}
             <Text style={{ fontWeight: "bold", color: theme.colors.onSurface }}>

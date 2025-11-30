@@ -1,117 +1,80 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useState } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import { Button, Dialog, Portal, Text } from "react-native-paper";
-import { firebaseStorage } from "../firebaseConfig";
 
-const EditableImage = ({ imageUri, setImageUri, imagePath, editable, text, style }) => {
+const EditableImage = ({ imageUri, setImageUri, editable, text, style }) => {
   const [dialogVisible, setDialogVisible] = useState(false);
 
-  const handleImagePicker = async () => {
+  const handlePress = () => {
     if (!editable) return;
     setDialogVisible(true);
   };
 
-  const openCamera = async () => {
+  const pickCamera = async () => {
     setDialogVisible(false);
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permissionResult.granted) return;
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images, // FIX
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) return;
+    const res = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       quality: 1,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
     });
-    if (!result.canceled) uploadImage(result.assets[0].uri);
+    if (!res.canceled) setImageUri(res.assets[0].uri);
   };
 
-  const openGallery = async () => {
+  const pickGallery = async () => {
     setDialogVisible(false);
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) return;
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images, // FIX
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) return;
+    const res = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
       quality: 1,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
     });
-    if (!result.canceled) uploadImage(result.assets[0].uri);
+    if (!res.canceled) setImageUri(res.assets[0].uri);
   };
 
-  const deleteImage = async () => {
+  const deleteLocal = () => {
     setDialogVisible(false);
-    try {
-      if (!imageUri) return;
-      const storageRef = ref(firebaseStorage, imagePath); // use path, not URL
-      await deleteObject(storageRef);
-      setImageUri(null);
-    } catch (error) {
-      console.error("Error deleting image: ", error);
-    }
-  };
-
-  const uploadImage = async (uri) => {
-    try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const storageRef = ref(firebaseStorage, `${imagePath}`);
-      await uploadBytes(storageRef, blob);
-      const downloadURL = await getDownloadURL(storageRef);
-      setImageUri(downloadURL);
-    } catch (error) {
-      console.error("Error uploading image: ", error);
-    }
+    setImageUri(null);
   };
 
   return (
     <View style={styles.container}>
-      {editable ? (
-        <Pressable style={styles.pressable} onPress={handleImagePicker}>
-          {imageUri ? (
-            <View style={[styles.imageContainer, style]}>
-              <Image source={{ uri: imageUri }} style={styles.image} />
-              <View style={styles.iconOverlay}>
-                <Ionicons name="pencil" size={32} color="#fff" />
+      <Pressable onPress={handlePress} style={styles.pressable}>
+        {imageUri ? (
+          <View style={[styles.imageContainer, style]}>
+            <Image source={{ uri: imageUri }} style={styles.image} />
+            {editable && (
+              <View style={styles.overlay}>
+                <Ionicons name="pencil" size={28} color="#fff" />
                 <Text style={styles.overlayText}>Tap to edit</Text>
               </View>
-            </View>
-          ) : (
-            <View style={[styles.placeholder, style]}>
-              {text ? (
-                <Text style={styles.placeholderText}>Tap to add image</Text>
-              ) : (
-                <Ionicons name="cloud-upload-outline" size={32} color="#333" />
-              )}
-            </View>
-          )}
-        </Pressable>
-      ) : (
-        <>
-          {imageUri ? (
-            <View style={[styles.imageContainer, style]}>
-              <Image source={{ uri: imageUri }} style={styles.image} />
-            </View>
-          ) : (
-            <View style={[styles.placeholder, style]}>
-              {text ? (
-                <Text style={styles.placeholderText}>No image.</Text>
-              ) : (
-                <Ionicons name="camera-outline" size={32} color="#333" />
-              )}
-            </View>
-          )}
-        </>
-      )}
+            )}
+          </View>
+        ) : (
+          <View style={[styles.placeholder, style]}>
+            {text ? (
+              <Text style={styles.placeholderText}>Tap to add image</Text>
+            ) : (
+              <Ionicons name="cloud-upload-outline" size={32} color="#333" />
+            )}
+          </View>
+        )}
+      </Pressable>
+
       <Portal>
         <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)}>
-          <Dialog.Title style={styles.dialogTitle}>Upload Image</Dialog.Title>
-            <Dialog.Content style={styles.dialogContent}>
-              <View style={styles.buttonContainer}>
-                <Button onPress={openCamera}>Camera</Button>
-                <Button onPress={openGallery}>Gallery</Button>
-                {imageUri && <Button onPress={deleteImage}>Delete</Button>}
-              </View>
-            </Dialog.Content>
+          <Dialog.Title style={styles.title}>Profile Picture</Dialog.Title>
+          <Dialog.Content style={styles.dialogContent}>
+            <View style={styles.buttonRow}>
+              <Button onPress={pickCamera}>Camera</Button>
+              <Button onPress={pickGallery}>Gallery</Button>
+              {imageUri && <Button onPress={deleteLocal}>Delete</Button>}
+            </View>
+          </Dialog.Content>
         </Dialog>
       </Portal>
     </View>
@@ -119,65 +82,39 @@ const EditableImage = ({ imageUri, setImageUri, imagePath, editable, text, style
 };
 
 const styles = StyleSheet.create({
-  container: {
-    width: "100%",
-  },
-  pressable: {
-    width: "100%",
-    height: "100%",
-  },
+  container: { width: "100%" },
+  pressable: { width: "100%", height: "100%" },
   placeholder: {
     width: "100%",
-    height: 180,
-    alignItems: "center",
-    justifyContent: "center",
+    height: "100%",
     backgroundColor: "lightgrey",
     borderRadius: 8,
-    overflow: "hidden",
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
+    alignItems: "center",
+    justifyContent: "center",
   },
   imageContainer: {
     width: "100%",
-    height: 180,
+    height: "100%",
     borderRadius: 8,
     overflow: "hidden",
   },
-  iconOverlay: {
+  image: { width: "100%", height: "100%", resizeMode: "cover" },
+  overlay: {
     position: "absolute",
-    top: 0,
-    left: 0,
     width: "100%",
     height: "100%",
+    backgroundColor: "rgba(0,0,0,0.35)",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.35)",
   },
-  dialogTitle: {
-    textAlign: "center",
-    fontWeight: "bold",
-    fontSize: 20,
-  },
-  dialogContent: {
-    alignItems: "center",
-    paddingTop: 8,
-  },
-  buttonContainer: {
+  overlayText: { color: "#fff", marginTop: 4, fontSize: 13 },
+  placeholderText: { color: "#000", fontSize: 14 },
+  title: { textAlign: "center", fontWeight: "bold", fontSize: 20 },
+  dialogContent: { alignItems: "center", paddingTop: 8 },
+  buttonRow: {
+    width: "100%",
     flexDirection: "row",
     justifyContent: "space-around",
-    width: "100%",
-  },
-  overlayText: {
-    color: "white",
-    fontSize: 14,
-    marginTop: 4,
-  },
-  placeholderText: {
-    color: "black",
-    fontSize: 14,
   },
 });
 

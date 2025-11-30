@@ -45,7 +45,8 @@ export default function ScanMeetup() {
     setScanned(true);
 
     try {
-      if (!firebaseUser) return showSnackbar("You must be signed in.", "failure");
+      if (!firebaseUser)
+        return showSnackbar("You must be signed in.", "failure");
 
       const qr = JSON.parse(data);
       if (qr.type !== "meetupConfirmation")
@@ -67,8 +68,7 @@ export default function ScanMeetup() {
 
       const price = computePrice(post);
       const isFree =
-        post.postType === "donate" ||
-        (post.postType === "rent" && price === 0);
+        post.postType === "donate" || (post.postType === "rent" && price === 0);
 
       if (isFree) {
         await setDoc(
@@ -146,7 +146,12 @@ export default function ScanMeetup() {
           zIndex: 20,
         }}
       >
-        <View style={[styles.backButtonBg, { backgroundColor: theme.colors.surface }]}> 
+        <View
+          style={[
+            styles.backButtonBg,
+            { backgroundColor: theme.colors.surface },
+          ]}
+        >
           <BackButton fallback="/(tabs)/chat" />
         </View>
       </View>
@@ -156,7 +161,12 @@ export default function ScanMeetup() {
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
       />
 
-      <View style={[styles.bottomOverlay, { backgroundColor: theme.colors.surface }]}> 
+      <View
+        style={[
+          styles.bottomOverlay,
+          { backgroundColor: theme.colors.surface },
+        ]}
+      >
         <Text
           variant="headlineSmall"
           style={[styles.titleText, { color: theme.colors.onSurface }]}

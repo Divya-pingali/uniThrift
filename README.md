@@ -1,50 +1,29 @@
-# Welcome to your Expo app 👋
+# UniThrift
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+UniThrift is a campus marketplace app for buying, selling, renting, and donating items among students.
 
-## Get started
+## Installation
 
-1. Install dependencies
+### Install APK
 
-   ```bash
-   npm install
-   ```
+1. Download the APK file attached to this repository.
+2. Transfer the APK to your Android device.
+3. Open the APK file and follow the prompts to install UniThrift.
+4. Launch the app and sign up or log in to start using UniThrift.
 
-2. Start the app
+## Features
 
-   ```bash
-   npx expo start
-   ```
+- Browse listings by category or map
+- Create, edit, and delete posts
+- In-app chat and QR code-based meetups
+- Stripe-powered payments for rentals and sales
+- Profile management
 
-In the output, you'll find options to open the app in a
+## Seller Account details:
+Email: seller@connect.hku.hk
+Password: password
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Buyer Account details:
+Email: user@connect.hku.hk
+Password: password
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.

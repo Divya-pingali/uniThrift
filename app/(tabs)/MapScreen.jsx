@@ -41,10 +41,10 @@ function MapScreen() {
   useEffect(() => {
     const fetchPosts = async () => {
       const snap = await getDocs(collection(db, "posts"));
-      let data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      let data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
       const updatedData = await Promise.all(
-        data.map(async post => {
+        data.map(async (post) => {
           if (
             post.location?.placeId &&
             (!post.location.latitude || !post.location.longitude)
@@ -115,7 +115,7 @@ function MapScreen() {
   return (
     <View style={{ flex: 1 }}>
       <View
-        onLayout={e => {
+        onLayout={(e) => {
           const h = e.nativeEvent.layout.height || 0;
           setHeaderHeight(h);
         }}
@@ -164,8 +164,9 @@ function MapScreen() {
           longitudeDelta: 0.01,
         }}
       >
-        {posts.map(post => {
-          if (!post.location?.latitude || !post.location?.longitude) return null;
+        {posts.map((post) => {
+          if (!post.location?.latitude || !post.location?.longitude)
+            return null;
 
           const key = `${post.location.latitude},${post.location.longitude}`;
           const group = locationGroups[key];
@@ -197,17 +198,31 @@ function MapScreen() {
       </MapView>
 
       {selectedPost && (
-        <View style={[styles.previewCard, { backgroundColor: theme.colors.surfaceContainerLowest }]}>
+        <View
+          style={[
+            styles.previewCard,
+            { backgroundColor: theme.colors.surfaceContainerLowest },
+          ]}
+        >
           <Image
             source={{ uri: selectedPost.image }}
             style={styles.previewImg}
           />
 
           <View style={{ flex: 1, marginLeft: 10 }}>
-            <Text style={[styles.previewTitle, { color: theme.colors.onSurface }]}>{selectedPost.title}</Text>
+            <Text
+              style={[styles.previewTitle, { color: theme.colors.onSurface }]}
+            >
+              {selectedPost.title}
+            </Text>
 
-            {/* Price badge similar to postDetail.jsx */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 4,
+              }}
+            >
               <View
                 style={{
                   borderRadius: 8,
@@ -215,30 +230,52 @@ function MapScreen() {
                   paddingHorizontal: 10,
                   backgroundColor:
                     selectedPost.postType === "sell"
-                      ? '#2e7d3215'
+                      ? "#2e7d3215"
                       : selectedPost.postType === "rent"
-                      ? '#0d47a11A'
-                      : '#6a1b9a20',
+                      ? "#0d47a11A"
+                      : "#6a1b9a20",
                 }}
               >
-                {selectedPost.postType === 'sell' && (
-                  <Text style={{ fontWeight: '700', fontSize: 14, color: '#2e7d32' }}>
+                {selectedPost.postType === "sell" && (
+                  <Text
+                    style={{
+                      fontWeight: "700",
+                      fontSize: 14,
+                      color: "#2e7d32",
+                    }}
+                  >
                     {`$${selectedPost.sellingPrice}`}
                   </Text>
                 )}
 
-                {selectedPost.postType === 'rent' && (
-                  <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                    <Text style={{ fontWeight: '700', fontSize: 14, color: '#0d47a1' }}>
+                {selectedPost.postType === "rent" && (
+                  <View
+                    style={{ flexDirection: "row", alignItems: "baseline" }}
+                  >
+                    <Text
+                      style={{
+                        fontWeight: "700",
+                        fontSize: 14,
+                        color: "#0d47a1",
+                      }}
+                    >
                       {`$${selectedPost.rentalPrice}`}
                     </Text>
-                    <Text style={{ color: '#0d47a1', marginLeft: 6 }}>{`/ ${selectedPost.rentalPriceUnit}`}</Text>
+                    <Text
+                      style={{ color: "#0d47a1", marginLeft: 6 }}
+                    >{`/ ${selectedPost.rentalPriceUnit}`}</Text>
                   </View>
                 )}
 
-                {selectedPost.postType === 'donate' && (
-                  <Text style={{ fontWeight: '700', fontSize: 14, color: '#6a1b9a' }}>
-                    {'FREE'}
+                {selectedPost.postType === "donate" && (
+                  <Text
+                    style={{
+                      fontWeight: "700",
+                      fontSize: 14,
+                      color: "#6a1b9a",
+                    }}
+                  >
+                    {"FREE"}
                   </Text>
                 )}
               </View>

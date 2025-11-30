@@ -6,11 +6,16 @@ import {
   limit,
   orderBy,
   query,
-  startAt
+  startAt,
 } from "firebase/firestore";
 import { useRef, useState } from "react";
 import { Dimensions, FlatList, Pressable, View } from "react-native";
-import { ActivityIndicator, Searchbar, Text, useTheme } from "react-native-paper";
+import {
+  ActivityIndicator,
+  Searchbar,
+  Text,
+  useTheme,
+} from "react-native-paper";
 import BackButton from "../components/BackButton";
 import PostCard from "../components/PostCard";
 import { db } from "../firebaseConfig";
@@ -39,7 +44,7 @@ export default function PostSearchScreen() {
       orderBy("title"),
       startAt(term),
       endAt(term + "\uf8ff"),
-      limit(5) 
+      limit(5)
     );
 
     const snap = await getDocs(q);
@@ -73,7 +78,7 @@ export default function PostSearchScreen() {
 
   const handleChange = (text) => {
     setSearch(text);
-    setResults([]); 
+    setResults([]);
     clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(() => {

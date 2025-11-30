@@ -20,7 +20,13 @@ export default function ShowMeetupQR() {
           backgroundColor: theme.colors.background,
         }}
       >
-        <View style={{ backgroundColor: theme.colors.background, width: '100%', paddingHorizontal: 16 }}>
+        <View
+          style={{
+            backgroundColor: theme.colors.background,
+            width: "100%",
+            paddingHorizontal: 16,
+          }}
+        >
           <BackButton fallback="/(tabs)/chat" />
         </View>
         <View
@@ -29,7 +35,7 @@ export default function ShowMeetupQR() {
             alignItems: "center",
             justifyContent: "flex-start",
             paddingHorizontal: 16,
-            width: '100%'
+            width: "100%",
           }}
         >
           <Text
@@ -61,7 +67,7 @@ export default function ShowMeetupQR() {
     <View
       style={{
         flex: 1,
-        backgroundColor: theme.colors.background
+        backgroundColor: theme.colors.background,
       }}
     >
       <View style={{ backgroundColor: theme.colors.background, paddingTop: 8 }}>

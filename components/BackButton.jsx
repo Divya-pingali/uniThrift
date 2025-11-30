@@ -13,11 +13,5 @@ export default function BackButton({ fallback = "/(tabs)/home" }) {
     }
   };
 
-  return (
-    <IconButton
-      icon="arrow-left"
-      size={28}
-      onPress={handleBack}
-    />
-  );
+  return <IconButton icon="arrow-left" size={28} onPress={handleBack} />;
 }

@@ -1,4 +1,4 @@
-import { StripeProvider } from '@stripe/stripe-react-native';
+import { StripeProvider } from "@stripe/stripe-react-native";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { onAuthStateChanged } from "firebase/auth";
@@ -12,8 +12,13 @@ import { darkTheme, lightTheme } from "../theme";
 function AppContent() {
   const theme = useTheme();
   return (
-    <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={['top', 'bottom']}>
+    <StripeProvider
+      publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+    >
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: theme.colors.background }}
+        edges={["top", "bottom"]}
+      >
         <StatusBar style={theme.dark ? "light" : "dark"} />
         <Stack screenOptions={{ headerShown: false }} />
       </SafeAreaView>
@@ -25,7 +30,7 @@ export default function RootLayout() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const colorScheme = useColorScheme();
-  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
+  const theme = colorScheme === "dark" ? darkTheme : lightTheme;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {

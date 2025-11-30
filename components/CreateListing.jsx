@@ -1,11 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
-import {
-  Animated,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Card, Text, useTheme } from "react-native-paper";
 
 const CreateListing = ({ onSelect }) => {
@@ -101,7 +96,7 @@ const makeStyles = (theme) =>
       width: "100%",
       height: 250,
       paddingVertical: 30,
-      backgroundColor: theme.colors.surface
+      backgroundColor: theme.colors.surface,
     },
     innerView: {
       flexDirection: "row",

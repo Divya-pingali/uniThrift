@@ -12,10 +12,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
-import {
-  StyleSheet,
-  View
-} from "react-native";
+import { StyleSheet, View } from "react-native";
 import {
   Bubble,
   Composer,
@@ -201,7 +198,9 @@ export default function ChatScreen() {
 
   if (!messages || !post) {
     return (
-      <View style={[styles.center, { backgroundColor: theme.colors.background }]}>
+      <View
+        style={[styles.center, { backgroundColor: theme.colors.background }]}
+      >
         <ActivityIndicator />
       </View>
     );
@@ -212,7 +211,7 @@ export default function ChatScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={styles.header}>
-        <BackButton fallback="/(tabs)/chat" style={{padding: 0}} />
+        <BackButton fallback="/(tabs)/chat" style={{ padding: 0 }} />
         <Ionicons
           name="person-circle-outline"
           size={42}
@@ -268,11 +267,16 @@ export default function ChatScreen() {
             />
           )}
 
-          {(post.status === "unpaid" || post.status === "exchanged") && isBuyer && (
-            <Button mode="contained" style={{borderRadius: 8}} onPress={retryPayment}>
-              Pay Now
-            </Button>
-          )}
+          {(post.status === "unpaid" || post.status === "exchanged") &&
+            isBuyer && (
+              <Button
+                mode="contained"
+                style={{ borderRadius: 8 }}
+                onPress={retryPayment}
+              >
+                Pay Now
+              </Button>
+            )}
         </View>
       </View>
 
@@ -386,7 +390,7 @@ const makeStyles = (theme) =>
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.outlineVariant,
       flexDirection: "row",
-      alignItems: "center"
+      alignItems: "center",
     },
     username: {
       fontWeight: "bold",
@@ -411,12 +415,16 @@ const makeStyles = (theme) =>
     },
     center: { flex: 1, justifyContent: "center", alignItems: "center" },
     smallBtn: { paddingHorizontal: 10, borderRadius: 8 },
-    rightActions: { flexDirection: "row", alignItems: "center", alignSelf: "center" },
-    qrIcon: { marginHorizontal: 12, alignSelf: "center"  },
+    rightActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      alignSelf: "center",
+    },
+    qrIcon: { marginHorizontal: 12, alignSelf: "center" },
     composer: {
       paddingTop: 8,
     },
     sendContainer: {
-      margin: 8
+      margin: 8,
     },
   });

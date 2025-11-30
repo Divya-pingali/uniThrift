@@ -9,12 +9,7 @@ exports.createPaymentIntent = functions.https.onCall(async (request) => {
     const data = request.data;
     const amount = data.amount;
 
-    if (
-      !amount ||
-      amount <= 0 ||
-      isNaN(amount) ||
-      typeof amount !== "number"
-    ) {
+    if (!amount || amount <= 0 || isNaN(amount) || typeof amount !== "number") {
       throw new Error("Invalid amount sent to payment intent");
     }
 
@@ -27,7 +22,6 @@ exports.createPaymentIntent = functions.https.onCall(async (request) => {
     return {
       clientSecret: paymentIntent.client_secret,
     };
-
   } catch (error) {
     console.error("Error creating payment intent:", error);
     return { error: error.message };

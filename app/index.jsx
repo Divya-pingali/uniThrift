@@ -6,7 +6,6 @@ import { Button, Text, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth } from "../firebaseConfig";
 
-
 export default function Index() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,13 +13,13 @@ export default function Index() {
   const styles = makeStyles(theme);
 
   const signIn = async () => {
-      try {
+    try {
       const user = await signInWithEmailAndPassword(auth, email, password);
       console.log("User signed in successfully");
-      } catch (error) {
+    } catch (error) {
       console.log(error);
       alert("Error signing in: " + error.message);
-      }
+    }
   };
 
   const signUp = () => {
@@ -33,10 +32,8 @@ export default function Index() {
     });
   };
 
-
   return (
     <SafeAreaView style={styles.container}>
-      
       <View style={styles.logoContainer}>
         <Text variant="headlineMedium" style={styles.title}>
           Welcome back
@@ -74,7 +71,6 @@ export default function Index() {
           </Text>
         </Text>
       </View>
-
     </SafeAreaView>
   );
 }

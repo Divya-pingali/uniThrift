@@ -1,306 +1,345 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { addDoc, collection, deleteDoc, doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, StyleSheet, View } from "react-native";
-import { Button, Chip, Dialog, Portal, SegmentedButtons, Text, TextInput, useTheme } from "react-native-paper";
-import { Dropdown } from 'react-native-paper-dropdown';
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
+import {
+  deleteObject,
+  getDownloadURL,
+  ref,
+  uploadBytes,
+} from "firebase/storage";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  StyleSheet,
+  View,
+} from "react-native";
+import {
+  Button,
+  Chip,
+  Dialog,
+  Portal,
+  SegmentedButtons,
+  Text,
+  TextInput,
+  useTheme,
+} from "react-native-paper";
+import { Dropdown } from "react-native-paper-dropdown";
 import BackButton from "../../components/BackButton";
 import EditableImage from "../../components/EditableImage";
 import LocationSearch from "../../components/LocationSearch";
 import AppSnackbar from "../../components/Snackbar";
 import CATEGORY_COLORS from "../../constants/categoryColors";
-import { auth, db, firebaseStorage } from '../../firebaseConfig';
+import { auth, db, firebaseStorage } from "../../firebaseConfig";
 
 export default function Post() {
-  const { type, id } = useLocalSearchParams(); 
+  const { type, id } = useLocalSearchParams();
   const router = useRouter();
-  const imagePathRef = useRef(`posts/${Date.now()}.jpg`);
   const theme = useTheme();
-  
+
+  const [localImageUri, setLocalImageUri] = useState(null);
+
   const TAG_OPTIONS = Object.keys(CATEGORY_COLORS);
   const AVAILABILITY_OPTIONS = [
-    { label: '1 month', value: '1 month' },
-    { label: '3 months', value: '3 months' },
-    { label: '6 months', value: '6 months' },
-    { label: '1 year', value: '1 year' },
-    { label: '3 years', value: '3 years' },
-    { label: '3+ years', value: '3+ years' },
-    { label: 'Not decided / Negotiable', value: 'Not decided / Negotiable' },
+    { label: "1 month", value: "1 month" },
+    { label: "3 months", value: "3 months" },
+    { label: "6 months", value: "6 months" },
+    { label: "1 year", value: "1 year" },
+    { label: "3 years", value: "3 years" },
+    { label: "3+ years", value: "3+ years" },
+    { label: "Not decided / Negotiable", value: "Not decided / Negotiable" },
   ];
 
   const RECURRENCE_OPTIONS = [
-    { label: 'Daily', value: 'daily' },
-    { label: 'Weekly', value: 'weekly' },
-    { label: 'Monthly', value: 'monthly' },
-    { label: 'Yearly', value: 'yearly' },
+    { label: "Daily", value: "daily" },
+    { label: "Weekly", value: "weekly" },
+    { label: "Monthly", value: "monthly" },
+    { label: "Yearly", value: "yearly" },
   ];
 
   const [postData, setPostData] = useState({
-    title: '',
-    description: '',
+    title: "",
+    description: "",
     image: null,
+    imagePath: null,
     location: null,
     tags: [],
-    sellingPrice: type === 'sell' ? '' : null,
-    rentalPrice: type === 'rent' ? '' : null,
-    rentalPriceUnit: type === 'rent' ? 'month' : null,
-    rentalPriceDuration: type === 'rent' ? 'Not decided / Negotiable' : null,
-    rentalPriceDeposit: type === 'rent' ? '' : null,
+    sellingPrice: type === "sell" ? "" : null,
+    rentalPrice: type === "rent" ? "" : null,
+    rentalPriceUnit: type === "rent" ? "month" : null,
+    rentalPriceDuration: type === "rent" ? "Not decided / Negotiable" : null,
+    rentalPriceDeposit: type === "rent" ? "" : null,
   });
+
   const [loading, setLoading] = useState(false);
-  
-  const handleNumericInput = (text, field) => {
-    if (/^\d*\.?\d*$/.test(text)) {
-      setPostData(prev => ({ ...prev, [field]: text }));
-    }
-  };
-    useEffect(() => {
-      async function fetchPost() {
-        if (id) {
-          setLoading(true);
-          const ref = doc(db, 'posts', id);
-          const snap = await getDoc(ref);
-          if (snap.exists()) {
-            const data = snap.data();
-            setPostData({
-              title: data.title || '',
-              description: data.description || '',
-              image: data.image || null,
-              location: data.location || null,
-              tags: Array.isArray(data.tags) ? data.tags : [],
-              sellingPrice: data.sellingPrice || '',
-              rentalPrice: data.rentalPrice || '',
-              rentalPriceUnit: data.rentalPriceUnit || 'month',
-              rentalPriceDuration: data.rentalPriceDuration || 'Not decided / Negotiable',
-              rentalPriceDeposit: data.rentalPriceDeposit || '',
-            });
-          }
-          setLoading(false);
+
+  useEffect(() => {
+    async function fetchPost() {
+      if (id) {
+        setLoading(true);
+        const refDoc = doc(db, "posts", id);
+        const snap = await getDoc(refDoc);
+        if (snap.exists()) {
+          const data = snap.data();
+          setPostData({
+            ...data,
+            title: data.title || "",
+            description: data.description || "",
+            image: data.image || null,
+            imagePath: data.imagePath || null,
+            location: data.location || null,
+            tags: Array.isArray(data.tags) ? data.tags : [],
+            sellingPrice: data.sellingPrice || "",
+            rentalPrice: data.rentalPrice || "",
+            rentalPriceUnit: data.rentalPriceUnit || "month",
+            rentalPriceDuration: data.rentalPriceDuration || "Not decided / Negotiable",
+            rentalPriceDeposit: data.rentalPriceDeposit || "",
+          });
+          setLocalImageUri(data.image || null);
         }
+        setLoading(false);
+      } else {
+        setPostData({
+          title: "",
+          description: "",
+          image: null,
+          imagePath: null,
+          location: null,
+          tags: [],
+          sellingPrice: type === "sell" ? "" : null,
+          rentalPrice: type === "rent" ? "" : null,
+          rentalPriceUnit: type === "rent" ? "month" : null,
+          rentalPriceDuration: type === "rent" ? "Not decided / Negotiable" : null,
+          rentalPriceDeposit: type === "rent" ? "" : null,
+        });
+        setLocalImageUri(null);
       }
-      fetchPost();
-    }, [id]);
+    }
+    fetchPost();
+  }, [id, type]);
+
   const [showTagLimit, setShowTagLimit] = useState(false);
-
   const [dialogVisible, setDialogVisible] = useState(false);
-  const [dialogTitle, setDialogTitle] = useState('');
-  const [dialogMessage, setDialogMessage] = useState('');
+  const [dialogTitle, setDialogTitle] = useState("");
+  const [dialogMessage, setDialogMessage] = useState("");
   const [successVisible, setSuccessVisible] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-
+  const [successMessage, setSuccessMessage] = useState("");
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
 
-  const showDialog = (title, message) => {
-    setDialogTitle(title);
-    setDialogMessage(message);
+  const showDialog = (t, m) => {
+    setDialogTitle(t);
+    setDialogMessage(m);
     setDialogVisible(true);
   };
   const hideDialog = () => setDialogVisible(false);
 
   const toggleTag = (tag) => {
-    setPostData((prev) => {
-      const isSelected = prev.tags.includes(tag);
-      if (!isSelected && prev.tags.length >= 3) {
+    setPostData((p) => {
+      const sel = p.tags.includes(tag);
+      if (!sel && p.tags.length >= 3) {
         setShowTagLimit(true);
-        return prev; 
+        return p;
       }
       return {
-        ...prev,
-        tags: isSelected
-          ? prev.tags.filter((t) => t !== tag)
-          : [tag, ...prev.tags.filter((t) => t !== tag)]
+        ...p,
+        tags: sel ? p.tags.filter((t) => t !== tag) : [tag, ...p.tags.filter((t) => t !== tag)],
       };
     });
   };
 
   const handleSubmit = async () => {
-    const { title, description, image, location, sellingPrice, rentalPrice, rentalPriceUnit, rentalPriceDuration } = postData;
-    const missingFields = [];
-    if (!title) missingFields.push('Title');
-    if (!image) missingFields.push('Image');
-    if (!location) missingFields.push('Location'); 
-    if (type === 'sell' && !sellingPrice) missingFields.push('Price');
-    if (type === 'rent') {
-      if (!rentalPrice) missingFields.push('Price');
-      if (!rentalPriceUnit) missingFields.push('Price Unit');
+    const { title, location, sellingPrice, rentalPrice, rentalPriceUnit } = postData;
+    const missing = [];
+    if (!title) missing.push("Title");
+    if (!localImageUri) missing.push("Image");
+    if (!location) missing.push("Location");
+    if (type === "sell" && !sellingPrice) missing.push("Price");
+    if (type === "rent") {
+      if (!rentalPrice) missing.push("Price");
+      if (!rentalPriceUnit) missing.push("Price Unit");
     }
-    if (missingFields.length > 0) {
-      showDialog('Missing Information', `Please fill out the following fields: ${missingFields.join(', ')}`);
+    if (missing.length > 0) {
+      showDialog("Missing Information", `Please fill out: ${missing.join(", ")}`);
       return;
     }
+
     try {
       const user = auth.currentUser;
       if (!user) {
-        showDialog('Error', 'You must be logged in to create a post.');
+        showDialog("Error", "You must be logged in.");
         return;
       }
-      let imageUrl = postData.image;
-      if (postData.image && (postData.image.startsWith('file://') || postData.image.startsWith('data:'))) {
-        const response = await fetch(postData.image);
-        const blob = await response.blob();
-        const storageRef = ref(firebaseStorage, imagePathRef.current);
-        await uploadBytes(storageRef, blob);
-        imageUrl = await getDownloadURL(storageRef);
-      }
-      if (id) {
-        // Edit mode: update existing post
-        const ref = doc(db, 'posts', id);
-        await updateDoc(ref, {
+
+      let finalPostId = id;
+      let finalImageUrl = postData.image;
+      let finalImagePath = postData.imagePath;
+
+      if (!id) {
+        const docRef = await addDoc(collection(db, "posts"), {
           ...postData,
-          image: imageUrl,
-          postType: type,
-        });
-        setSuccessMessage('Post updated successfully!');
-        setSuccessVisible(true);
-        setTimeout(() => {
-          router.replace('/profile');
-        }, 500);
-      } else {
-        // Create mode: add new post
-        await addDoc(collection(db, 'posts'), {
-          ...postData,
-          image: imageUrl,
           userId: user.uid,
           createdAt: serverTimestamp(),
           postType: type,
-          status: 'available',
-        });
-        setSuccessMessage('Post submitted successfully!');
-        setPostData(prev => ({
-          ...prev,
-          title: '',
-          description: '',
           image: null,
-          tags: [],
-          sellingPrice: type === 'sell' ? '' : null,
-          rentalPrice: type === 'rent' ? '' : null,
-          rentalPriceUnit: type === 'rent' ? 'month' : null,
-          rentalPriceDuration: type === 'rent' ? '' : null,
-          rentalPriceDeposit: type === 'rent' ? '' : null,
-          location: null,
-        }));
-        setSuccessVisible(true);
-        setTimeout(() => {
-          router.replace('/(tabs)/home');
-        }, 500);
+          imagePath: null,
+          status: "available",
+        });
+        finalPostId = docRef.id;
       }
+
+      if (localImageUri && (localImageUri.startsWith("file://") || localImageUri.startsWith("data:"))) {
+        const uploadPath = `posts/${finalPostId}.jpg`;
+        const response = await fetch(localImageUri);
+        const blob = await response.blob();
+        const storageRef = ref(firebaseStorage, uploadPath);
+        await uploadBytes(storageRef, blob);
+        finalImageUrl = await getDownloadURL(storageRef);
+        finalImagePath = uploadPath;
+      }
+
+      const refDoc = doc(db, "posts", finalPostId);
+      await updateDoc(refDoc, {
+        ...postData,
+        image: finalImageUrl,
+        imagePath: finalImagePath,
+        postType: type,
+      });
+
+      setSuccessMessage(id ? "Post updated successfully!" : "Post submitted successfully!");
+      setSuccessVisible(true);
+      setTimeout(() => {
+        router.replace(id ? "/profile" : "/(tabs)/home");
+      }, 500);
     } catch (e) {
-      console.error('Error saving document: ', e);
-      showDialog('Error', 'There was an error saving your post.');
+      showDialog("Error", "Error saving post.");
     }
   };
 
-  // Add state for delete confirmation dialog
-  const handleDelete = () => {
-    setDeleteDialogVisible(true);
-  };
+  const handleDelete = () => setDeleteDialogVisible(true);
 
-  // Confirm delete action
   const confirmDelete = async () => {
     setDeleteDialogVisible(false);
     if (!id) return;
     setLoading(true);
     try {
-      await deleteDoc(doc(db, 'posts', id));
-      if (postData.image && postData.image.startsWith('https://')) {
-        const imageRef = ref(firebaseStorage, imagePathRef.current);
-        try {
-          await deleteObject(imageRef);
-        } catch (e) {
-          // Ignore if image not found
-        }
+      await deleteDoc(doc(db, "posts", id));
+      if (postData.imagePath) {
+        const storageRef = ref(firebaseStorage, postData.imagePath);
+        await deleteObject(storageRef).catch(() => {});
       }
-      setSuccessMessage('Post deleted successfully!');
+      setSuccessMessage("Post deleted successfully!");
       setSuccessVisible(true);
-      setTimeout(() => {
-        router.replace('/profile');
-      }, 500);
+      setTimeout(() => router.replace("/profile"), 500);
     } catch (e) {
-      showDialog('Error', 'There was an error deleting your post.');
+      showDialog("Error", "Error deleting post.");
     }
     setLoading(false);
   };
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.colors.background }}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
+
   return (
-    <KeyboardAvoidingView
-      style={styles.keyboardView}
-      behavior={"height"}
-    >
-      <View style={{ backgroundColor: theme.colors.background, paddingTop: 8}}>
+    <KeyboardAvoidingView style={styles.keyboardView} behavior={"height"}>
+      <View style={{ backgroundColor: theme.colors.background, paddingTop: 8 }}>
         <BackButton fallback="/(tabs)/home" />
       </View>
+
       <FlatList
         style={[styles.scroll, { backgroundColor: theme.colors.background }]}
         contentContainerStyle={[styles.content, { backgroundColor: theme.colors.background }]}
         keyboardShouldPersistTaps="handled"
         data={[]}
-        scrollEnabled={true}
+        scrollEnabled
         removeClippedSubviews={false}
-        showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
-        overScrollMode="never"
         ListHeaderComponent={
-          <View style={[styles.content, { backgroundColor: theme.colors.background }]}> 
-            <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "flex-start" }}>
+          <View style={[styles.content, { backgroundColor: theme.colors.background }]}>
             <Text variant="headlineMedium" style={styles.header}>
-              {id ? 'Edit Listing' : 'New Listing'}
+              {id ? "Edit Listing" : "New Listing"}
             </Text>
-            </View>
-            <Text variant="bodyMedium" style={[styles.componentDescription, { color: theme.colors.onSurfaceVariant }]}
-            >
-              You have selected to {type} an item. Please provide the details below.
+
+            <Text variant="bodyMedium" style={[styles.componentDescription, { color: theme.colors.onSurfaceVariant }]}>
+              You have selected to {type} an item. Provide details below.
             </Text>
+
             <SegmentedButtons
               value={type}
               style={styles.segmentedButtons}
-              onValueChange={(value) => router.replace(id ? `/post?type=${value}&id=${id}` : `/post?type=${value}`)}
+              onValueChange={(v) =>
+                router.replace(id ? `/post?type=${v}&id=${id}` : `/post?type=${v}`)
+              }
               buttons={[
-                { value: 'sell', label: 'Sell', checkedColor: theme.colors.onPrimary, style: type === 'sell' ? { backgroundColor: theme.colors.primary } : {} },
-                { value: 'donate',label: 'Donate', checkedColor: theme.colors.onPrimary, style: type === 'donate' ? { backgroundColor: theme.colors.primary } : {} },
-                { value: 'rent', label: 'Rent', checkedColor: theme.colors.onPrimary, style: type === 'rent' ? { backgroundColor: theme.colors.primary } : {} },
+                {
+                  value: "sell",
+                  label: "Sell",
+                  checkedColor: theme.colors.onPrimary,
+                  style: type === "sell" ? { backgroundColor: theme.colors.primary } : {},
+                },
+                {
+                  value: "donate",
+                  label: "Donate",
+                  checkedColor: theme.colors.onPrimary,
+                  style: type === "donate" ? { backgroundColor: theme.colors.primary } : {},
+                },
+                {
+                  value: "rent",
+                  label: "Rent",
+                  checkedColor: theme.colors.onPrimary,
+                  style: type === "rent" ? { backgroundColor: theme.colors.primary } : {},
+                },
               ]}
             />
+
             <Text variant="titleMedium" style={styles.label}>
               Upload Image
             </Text>
+
             <View style={styles.imageContainer}>
               <EditableImage
-                imageUri={postData.image}
-                setImageUri={(uri) => setPostData((prev) => ({ ...prev, image: uri }))}
-                imagePath={imagePathRef.current}
+                imageUri={localImageUri}
+                setImageUri={(uri) => setLocalImageUri(uri)}
                 editable={true}
                 style={styles.image}
               />
             </View>
+
             <Text variant="titleMedium" style={styles.label}>
               Product Name
             </Text>
             <TextInput
               mode="outlined"
               value={postData.title}
-              onChangeText={(text) => setPostData(prev => ({ ...prev, title: text }))}
+              onChangeText={(t) => setPostData((p) => ({ ...p, title: t }))}
               style={styles.input}
             />
+
             <Text variant="titleMedium" style={styles.label}>
               Product Description
             </Text>
             <TextInput
               mode="outlined"
               value={postData.description}
-              onChangeText={(text) => setPostData(prev => ({ ...prev, description: text }))}
+              onChangeText={(t) => setPostData((p) => ({ ...p, description: t }))}
               style={styles.descriptionInput}
               multiline
             />
-            {type === 'sell' && (
+
+            {type === "sell" && (
               <>
                 <Text variant="titleMedium" style={styles.label}>
                   Price
@@ -309,27 +348,24 @@ export default function Post() {
                   mode="outlined"
                   label="HKD"
                   value={postData.sellingPrice}
-                  onChangeText={(text) => handleNumericInput(text, 'sellingPrice')}
+                  onChangeText={(t) => setPostData((p) => ({ ...p, sellingPrice: t }))}
                   style={styles.input}
                   keyboardType="numeric"
                   left={<TextInput.Icon icon="currency-usd" />}
                 />
               </>
             )}
-            {type === 'donate' && (
+
+            {type === "donate" && (
               <View style={[styles.infoBox, { backgroundColor: theme.colors.tertiaryContainer }]}>
-                <Ionicons
-                  name="information-circle-outline"
-                  size={25}
-                  color={theme.colors.onTertiaryContainer}
-                  style={{ margin: 3 }}
-                />
-                <Text variant="titleMedium" style={[{ fontWeight: 600, color: theme.colors.onTertiaryContainer }]}>
+                <Ionicons name="information-circle-outline" size={25} color={theme.colors.onTertiaryContainer} style={{ margin: 3 }} />
+                <Text variant="titleMedium" style={{ fontWeight: 600, color: theme.colors.onTertiaryContainer }}>
                   This item will be listed as Free
                 </Text>
               </View>
             )}
-            {type === 'rent' && (
+
+            {type === "rent" && (
               <>
                 <View style={styles.rentalPriceContainer}>
                   <View style={{ flex: 1, marginHorizontal: 4 }}>
@@ -340,14 +376,15 @@ export default function Post() {
                       mode="outlined"
                       label="HKD"
                       value={postData.rentalPrice}
-                      onChangeText={(text) => handleNumericInput(text, 'rentalPrice')}
+                      onChangeText={(t) => setPostData((p) => ({ ...p, rentalPrice: t }))}
                       keyboardType="numeric"
                       left={<TextInput.Icon icon="currency-usd" />}
-                      style={{ width: '100%', height: 56 }}
+                      style={{ width: "100%", height: 56 }}
                     />
                   </View>
+
                   <View style={{ flex: 1, marginHorizontal: 4 }}>
-                    <Text variant="titleMedium" style={{marginBottom: 10}}>
+                    <Text variant="titleMedium" style={{ marginBottom: 10 }}>
                       Recurring
                     </Text>
                     <Dropdown
@@ -355,7 +392,7 @@ export default function Post() {
                       hideMenuHeader
                       options={RECURRENCE_OPTIONS}
                       value={postData.rentalPriceUnit}
-                      onSelect={(value) => setPostData(prev => ({ ...prev, rentalPriceUnit: value }))}
+                      onSelect={(v) => setPostData((p) => ({ ...p, rentalPriceUnit: v }))}
                       style={styles.rentalPriceItem}
                       dropDownStyle={{ backgroundColor: theme.colors.surface }}
                       selectedItemLabelStyle={{ color: theme.colors.primary }}
@@ -363,7 +400,8 @@ export default function Post() {
                     />
                   </View>
                 </View>
-                <View style={{ width: '100%', marginTop: 16 }}>
+
+                <View style={{ width: "100%", marginTop: 16 }}>
                   <Text variant="titleMedium" style={styles.label}>
                     Deposit
                   </Text>
@@ -371,63 +409,77 @@ export default function Post() {
                     mode="outlined"
                     label="HKD"
                     value={postData.rentalPriceDeposit}
-                    onChangeText={(text) => handleNumericInput(text, 'rentalPriceDeposit')}
+                    onChangeText={(t) => setPostData((p) => ({ ...p, rentalPriceDeposit: t }))}
                     keyboardType="numeric"
                     left={<TextInput.Icon icon="currency-usd" />}
                     style={{ marginBottom: 24 }}
                   />
+
                   <Text variant="titleMedium" style={styles.label}>
                     Duration
                   </Text>
-                  <View style={{ width: '100%' }}>
-                    <Dropdown
-                      mode="outlined"
-                      hideMenuHeader
-                      options={AVAILABILITY_OPTIONS}
-                      value={postData.rentalPriceDuration}
-                      onSelect={(value) => setPostData(prev => ({ ...prev, rentalPriceDuration: value }))}
-                    />
-                  </View>
+
+                  <Dropdown
+                    mode="outlined"
+                    hideMenuHeader
+                    options={AVAILABILITY_OPTIONS}
+                    value={postData.rentalPriceDuration}
+                    onSelect={(v) => setPostData((p) => ({ ...p, rentalPriceDuration: v }))}
+                  />
                 </View>
               </>
             )}
-            <View style={{ width: '100%', marginTop: 32 }}>
+
+            <View style={{ width: "100%", marginTop: 32 }}>
               <Text variant="titleMedium" style={styles.label}>
                 Meetup Location
               </Text>
-              <Text variant="bodyMedium" style={[styles.componentDescription, { color: theme.colors.onSurfaceVariant }]}>
+              <Text
+                variant="bodyMedium"
+                style={[styles.componentDescription, { color: theme.colors.onSurfaceVariant }]}
+              >
                 Choose a location where you would like to meet the buyer/donee/renter.
               </Text>
+
               <LocationSearch
-                onSelect={(loc) => {
-                  setPostData((prev) => ({ ...prev, location: loc }));
-                }}
+                onSelect={(loc) => setPostData((p) => ({ ...p, location: loc }))}
                 style={styles.input}
               />
             </View>
+
             <Text variant="titleMedium" style={[styles.label, { marginTop: 32 }]}>
               Categories
             </Text>
-            <Text variant="bodyMedium" style={[styles.componentDescription, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              variant="bodyMedium"
+              style={[styles.componentDescription, { color: theme.colors.onSurfaceVariant }]}
+            >
               Choose up to 3 tags that best describe your item.
             </Text>
+
             <View style={styles.chipContainer}>
               {TAG_OPTIONS.map((tag) => {
                 const selected = postData.tags.includes(tag);
-                const limitReached = postData.tags.length >= 3;
+                const limit = postData.tags.length >= 3;
                 return (
                   <Chip
                     key={tag}
                     mode="outlined"
                     selected={selected}
                     onPress={() => toggleTag(tag)}
-                    disabled={limitReached && !selected}
+                    disabled={limit && !selected}
                     selectedColor={theme.colors.primary}
-                    icon={() => (<Ionicons name={selected ? "checkmark" : null} size={16} color={selected ? theme.colors.onPrimaryContainer : theme.colors.primary} />)}
+                    icon={() => (
+                      <Ionicons
+                        name={selected ? "checkmark" : null}
+                        size={16}
+                        color={selected ? theme.colors.onPrimaryContainer : theme.colors.primary}
+                      />
+                    )}
                     style={[
                       styles.chip,
                       { borderColor: theme.colors.primary },
-                      selected && { backgroundColor: theme.colors.primaryContainer }
+                      selected && { backgroundColor: theme.colors.primaryContainer },
                     ]}
                     textStyle={selected && { color: theme.colors.onPrimaryContainer }}
                   >
@@ -442,160 +494,116 @@ export default function Post() {
                 You can select up to 3 tags only.
               </Text>
             )}
-
           </View>
         }
       />
-    {id ? (
-      <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 16, paddingHorizontal: 24 }}>
-        <Button 
-          mode="outlined"
-          style={{ margin: 8, width: "48%", alignSelf: 'center', borderRadius: 16, height: 45, justifyContent: 'center' }} 
-          onPress={handleDelete}
-          icon="trash-can-outline"
-        >
-          Delete
-        </Button>
-        <Button 
-          mode="contained"
-          style={{
-            margin: 8,
-            width: "48%",
-            alignSelf: 'center',
-            borderRadius: 16,
-            height: 45,
-            justifyContent: 'center'
-          }} 
-          onPress={handleSubmit}
-        >
-          Submit
-        </Button>
-      </View>
-    ) : (
-      <View style={{ marginBottom: 16, paddingHorizontal: 24, alignItems: 'center' }}>
-        <Button 
-          mode="contained"
-          style={{
-            margin: 8,
-            width: "100%",
-            borderRadius: 16,
-            height: 45,
-            justifyContent: 'center'
-          }} 
-          onPress={handleSubmit}
-        >
-          Submit
-        </Button>
-      </View>
-    )}
-    <Portal>
-      <Dialog visible={dialogVisible} onDismiss={hideDialog}>
-        <Dialog.Title variant="bodyLarge" style={styles.header}>{dialogTitle}</Dialog.Title>
-        <Dialog.Content>
-          <Text variant="bodyMedium" style={styles.componentDescription}>{dialogMessage}</Text>
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button 
-            onPress={hideDialog}
-            style={{ margin: 16, fontSize: 20}}
+
+      {id ? (
+        <View style={{ flexDirection: "row", justifyContent: "center", paddingHorizontal: 24, backgroundColor: theme.colors.background }}>
+          <Button
+            mode="outlined"
+            style={{ margin: 8, width: "48%", borderRadius: 16, height: 45, justifyContent: "center" }}
+            onPress={handleDelete}
+            icon="trash-can-outline"
           >
-              OK
-          </Button>
-        </Dialog.Actions>
-      </Dialog>
-      <Dialog visible={deleteDialogVisible} onDismiss={() => setDeleteDialogVisible(false)}>
-        <Dialog.Title style={styles.header}>Are you sure?</Dialog.Title>
-        <Dialog.Content>
-          <Text variant="bodyMedium" style={styles.componentDescription}>
-            This action will permanently delete your post and its image. Are you sure you want to continue?
-          </Text>
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button onPress={() => setDeleteDialogVisible(false)} style={{ margin: 8 }}>
-            Cancel
-          </Button>
-          <Button onPress={confirmDelete} style={{ margin: 8 }} mode="contained">
             Delete
           </Button>
-        </Dialog.Actions>
-      </Dialog>
-    </Portal>
+          <Button
+            mode="contained"
+            style={{ margin: 8, width: "48%", borderRadius: 16, height: 45, justifyContent: "center" }}
+            onPress={handleSubmit}
+          >
+            Submit
+          </Button>
+        </View>
+      ) : (
+        <View style={{ paddingHorizontal: 24, alignItems: "center", backgroundColor: theme.colors.background }}>
+          <Button
+            mode="contained"
+            style={{ margin: 8, width: "100%", borderRadius: 16, height: 45, justifyContent: "center" }}
+            onPress={handleSubmit}
+          >
+            Submit
+          </Button>
+        </View>
+      )}
 
-    <AppSnackbar
-      visible={successVisible}
-      onDismiss={() => setSuccessVisible(false)}
-      message={successMessage}
-      type="success"
-      duration={2500}
-    />
+      <Portal>
+        <Dialog visible={dialogVisible} onDismiss={hideDialog}>
+          <Dialog.Title variant="bodyLarge" style={styles.header}>
+            {dialogTitle}
+          </Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium" style={styles.componentDescription}>
+              {dialogMessage}
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={hideDialog} style={{ margin: 16, fontSize: 20 }}>
+              OK
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
 
+        <Dialog visible={deleteDialogVisible} onDismiss={() => setDeleteDialogVisible(false)}>
+          <Dialog.Title style={styles.header}>Are you sure?</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium" style={styles.componentDescription}>
+              This action will permanently delete your post and its image. Are you sure you want to continue?
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setDeleteDialogVisible(false)} style={{ margin: 8 }}>
+              Cancel
+            </Button>
+            <Button onPress={confirmDelete} style={{ margin: 8 }} mode="contained">
+              Delete
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      <AppSnackbar
+        visible={successVisible}
+        onDismiss={() => setSuccessVisible(false)}
+        message={successMessage}
+        type="success"
+        duration={2500}
+      />
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  header: {
-    marginBottom: 8,
-    fontWeight: '800',
-  },
-  segmentedButtons: {
-    marginBottom: 24,
-  },
-  input: {
-    marginBottom: 16,
-  },
-  content: {
-    paddingHorizontal: 8
-  },
-  descriptionInput: {
-    marginBottom: 16,
-    minHeight: 140,
-  },
-  label: {
-    marginBottom: 4,
-  },
-  componentDescription: {
-    marginBottom: 20,
-  },
+  scroll: { flex: 1 },
+  keyboardView: { flex: 1 },
+  header: { marginBottom: 8, fontWeight: "800" },
+  segmentedButtons: { marginBottom: 24 },
+  input: { marginBottom: 16 },
+  content: { paddingHorizontal: 8 },
+  descriptionInput: { marginBottom: 16, minHeight: 140 },
+  label: { marginBottom: 4 },
+  componentDescription: { marginBottom: 20 },
   imageContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 16,
-    width: '100%',
+    width: "100%",
     height: 180,
   },
   infoBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
     borderRadius: 8,
   },
   rentalPriceContainer: {
     marginBottom: 8,
     marginTop: 8,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
   },
-  rentalPriceItem: {
-    width: '100%'
-  },
-  chipContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 32,
-  },
-  chip: {
-    margin: 4,
-  },
-  chipSelected: {
-  },
-  chipSelectedText: {
-  },
+  rentalPriceItem: { width: "100%" },
+  chipContainer: { flexDirection: "row", flexWrap: "wrap", marginBottom: 32 },
+  chip: { margin: 4 },
 });

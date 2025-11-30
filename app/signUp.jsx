@@ -2,8 +2,20 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { useRef, useState } from "react";
-import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from "react-native";
-import { Button, Dialog, Portal, Text, TextInput, useTheme } from "react-native-paper";
+import {
+  KeyboardAvoidingView,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
+import {
+  Button,
+  Dialog,
+  Portal,
+  Text,
+  TextInput,
+  useTheme,
+} from "react-native-paper";
 import BackButton from "../components/BackButton";
 import AppSnackbar from "../components/Snackbar";
 import { auth, db } from "../firebaseConfig";
@@ -40,19 +52,13 @@ export default function SignUp() {
     if (atIndex !== -1) {
       const domain = email.slice(atIndex + 1);
       const requiredDomain = "connect.hku.hk";
-      // Show error if domain is present and doesn't match the required domain start
-      if (
-        domain.length > 0 &&
-        !requiredDomain.startsWith(domain)
-      ) {
+
+      if (domain.length > 0 && !requiredDomain.startsWith(domain)) {
         setEmailError("Email must end with @connect.hku.hk");
         return false;
       }
-      // Show error if full domain is present and doesn't match exactly
-      if (
-        domain.length >= requiredDomain.length &&
-        domain !== requiredDomain
-      ) {
+
+      if (domain.length >= requiredDomain.length && domain !== requiredDomain) {
         setEmailError("Email must end with @connect.hku.hk");
         return false;
       }
@@ -63,27 +69,32 @@ export default function SignUp() {
 
   const signUp = async () => {
     const missingFields = [];
-    if (!userData.email) missingFields.push('Email');
-    if (!userData.password) missingFields.push('Password');
-    if (!userData.name) missingFields.push('Name');
+    if (!userData.email) missingFields.push("Email");
+    if (!userData.password) missingFields.push("Password");
+    if (!userData.name) missingFields.push("Name");
 
-    // Final email validation before submit
     const atIndex = userData.email.indexOf("@");
     const validEmail =
-      atIndex !== -1 &&
-      userData.email.endsWith("@connect.hku.hk");
+      atIndex !== -1 && userData.email.endsWith("@connect.hku.hk");
 
     if (!validEmail) {
-      showDialog('Invalid Email', 'Email must end with @connect.hku.hk');
+      showDialog("Invalid Email", "Email must end with @connect.hku.hk");
       return;
     }
 
     if (missingFields.length > 0) {
-      showDialog('Missing Information', `Please fill out the following fields: ${missingFields.join(', ')}`);
+      showDialog(
+        "Missing Information",
+        `Please fill out the following fields: ${missingFields.join(", ")}`
+      );
       return;
     }
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        userData.email,
+        userData.password
+      );
       const user = userCredential.user;
       await setDoc(doc(db, "users", user.uid), {
         name: userData.name,
@@ -92,7 +103,7 @@ export default function SignUp() {
         phone: userData.phone,
         image: null,
       });
-      setSuccessMessage('Account created successfully!');
+      setSuccessMessage("Account created successfully!");
       setSuccessVisible(true);
       setUserData({
         email: "",
@@ -100,24 +111,31 @@ export default function SignUp() {
         name: "",
         bio: "",
         phone: "",
-        image: null
+        image: null,
       });
     } catch (error) {
       console.log(error);
-      showDialog('Error', 'There was an error creating your account.');
+      showDialog("Error", "There was an error creating your account.");
     }
   };
 
   return (
     <>
-      <KeyboardAvoidingView
-        style={styles.keyboardView}
-        behavior={"height"}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start" }}>
+      <KeyboardAvoidingView style={styles.keyboardView} behavior={"height"}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "flex-start",
+          }}
+        >
           <BackButton fallback="/login" />
         </View>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.logoContainer}>
             <Text variant="headlineMedium" style={styles.header}>
               Create Account
@@ -127,13 +145,15 @@ export default function SignUp() {
             </Text>
           </View>
           <View style={styles.form}>
-            <Text variant="titleMedium" style={styles.label}>Email</Text>
+            <Text variant="titleMedium" style={styles.label}>
+              Email
+            </Text>
             <TextInput
               mode="outlined"
               label="Email"
               value={userData.email}
-              onChangeText={text => {
-                setUserData(prev => ({ ...prev, email: text }));
+              onChangeText={(text) => {
+                setUserData((prev) => ({ ...prev, email: text }));
                 validateEmail(text);
               }}
               style={styles.input}
@@ -144,41 +164,54 @@ export default function SignUp() {
             {emailError ? (
               <Text style={styles.errorText}>{emailError}</Text>
             ) : null}
-            <Text variant="titleMedium" style={styles.label}>Password</Text>
+            <Text variant="titleMedium" style={styles.label}>
+              Password
+            </Text>
             <TextInput
               mode="outlined"
               label="Password"
               value={userData.password}
-              onChangeText={text => setUserData(prev => ({ ...prev, password: text }))}
+              onChangeText={(text) =>
+                setUserData((prev) => ({ ...prev, password: text }))
+              }
               secureTextEntry
               style={styles.input}
             />
-            <Text variant="titleMedium" style={styles.label}>Name</Text>
+            <Text variant="titleMedium" style={styles.label}>
+              Name
+            </Text>
             <TextInput
               mode="outlined"
               label="Name"
               value={userData.name}
-              onChangeText={text => setUserData(prev => ({ ...prev, name: text }))}
+              onChangeText={(text) =>
+                setUserData((prev) => ({ ...prev, name: text }))
+              }
               style={styles.input}
             />
-            <Text variant="titleMedium" style={styles.label}>Bio</Text>
+            <Text variant="titleMedium" style={styles.label}>
+              Bio
+            </Text>
             <TextInput
               mode="outlined"
               label="Bio"
               value={userData.bio}
-              onChangeText={text => setUserData(prev => ({ ...prev, bio: text }))}
+              onChangeText={(text) =>
+                setUserData((prev) => ({ ...prev, bio: text }))
+              }
               style={[styles.input, { minHeight: 100 }]}
               multiline
             />
-            <Text variant="titleMedium" style={styles.label}>Phone Number</Text>
+            <Text variant="titleMedium" style={styles.label}>
+              Phone Number
+            </Text>
             <TextInput
               mode="outlined"
               label="Phone Number"
               value={userData.phone}
-              onChangeText={text => {
-                // Only allow numbers
+              onChangeText={(text) => {
                 if (/^\d*$/.test(text)) {
-                  setUserData(prev => ({ ...prev, phone: text }));
+                  setUserData((prev) => ({ ...prev, phone: text }));
                 }
               }}
               style={styles.input}
@@ -188,9 +221,9 @@ export default function SignUp() {
           </View>
         </ScrollView>
         <View style={styles.buttonContainer}>
-          <Button 
-            mode="contained" 
-            onPress={signUp} 
+          <Button
+            mode="contained"
+            onPress={signUp}
             style={styles.button}
             disabled={!!emailError}
           >
@@ -198,13 +231,32 @@ export default function SignUp() {
           </Button>
         </View>
         <Portal>
-          <Dialog visible={dialogVisible} onDismiss={hideDialog} style={{ backgroundColor: theme.colors.surface }}>
-            <Dialog.Title variant="bodyLarge" style={[styles.header, { color: theme.colors.onSurface }]}>{dialogTitle}</Dialog.Title>
+          <Dialog
+            visible={dialogVisible}
+            onDismiss={hideDialog}
+            style={{ backgroundColor: theme.colors.surface }}
+          >
+            <Dialog.Title
+              variant="bodyLarge"
+              style={[styles.header, { color: theme.colors.onSurface }]}
+            >
+              {dialogTitle}
+            </Dialog.Title>
             <Dialog.Content>
-              <Text variant="bodyMedium" style={[styles.componentDescription, { color: theme.colors.onSurfaceVariant }]}>{dialogMessage}</Text>
+              <Text
+                variant="bodyMedium"
+                style={[
+                  styles.componentDescription,
+                  { color: theme.colors.onSurfaceVariant },
+                ]}
+              >
+                {dialogMessage}
+              </Text>
             </Dialog.Content>
             <Dialog.Actions>
-              <Button onPress={hideDialog} style={{ margin: 16, fontSize: 20 }}>OK</Button>
+              <Button onPress={hideDialog} style={{ margin: 16, fontSize: 20 }}>
+                OK
+              </Button>
             </Dialog.Actions>
           </Dialog>
         </Portal>
@@ -220,62 +272,63 @@ export default function SignUp() {
   );
 }
 
-const makeStyles = (theme) => StyleSheet.create({
-  keyboardView: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 0,
-    flexGrow: 1,
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  header: {
-    marginBottom: 8,
-    fontWeight: "800",
-    textAlign: "center",
-    color: theme.colors.onBackground,
-  },
-  componentDescription: {
-    marginBottom: 20,
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-  },
-  form: {
-    width: "100%",
-    marginBottom: 16,
-  },
-  input: {
-    marginBottom: 24,
-  },
-  buttonContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  button: {
-    borderRadius: 16,
-    height: 45,
-    justifyContent: 'center',
-  },
-  label: {
-    marginBottom: 4,
-    fontWeight: '500',
-    color: theme.colors.onBackground,
-  },
-  imageContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-    width: '100%',
-    height: 180,
-  },
-  errorText: {
-    color: theme.colors.error,
-    marginBottom: 12,
-    marginLeft: 4,
-    fontSize: 14,
-  },
-});
+const makeStyles = (theme) =>
+  StyleSheet.create({
+    keyboardView: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    content: {
+      padding: 16,
+      paddingBottom: 0,
+      flexGrow: 1,
+    },
+    logoContainer: {
+      alignItems: "center",
+      marginBottom: 24,
+    },
+    header: {
+      marginBottom: 8,
+      fontWeight: "800",
+      textAlign: "center",
+      color: theme.colors.onBackground,
+    },
+    componentDescription: {
+      marginBottom: 20,
+      color: theme.colors.onSurfaceVariant,
+      textAlign: "center",
+    },
+    form: {
+      width: "100%",
+      marginBottom: 16,
+    },
+    input: {
+      marginBottom: 24,
+    },
+    buttonContainer: {
+      paddingHorizontal: 16,
+      paddingBottom: 16,
+    },
+    button: {
+      borderRadius: 16,
+      height: 45,
+      justifyContent: "center",
+    },
+    label: {
+      marginBottom: 4,
+      fontWeight: "500",
+      color: theme.colors.onBackground,
+    },
+    imageContainer: {
+      alignItems: "center",
+      marginBottom: 16,
+      width: "100%",
+      height: 180,
+    },
+    errorText: {
+      color: theme.colors.error,
+      marginBottom: 12,
+      marginLeft: 4,
+      fontSize: 14,
+    },
+  });

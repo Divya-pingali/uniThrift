@@ -1,6 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
-import { collection, onSnapshot, orderBy, query, where } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  orderBy,
+  query,
+  where,
+} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import {
   Dimensions,
@@ -38,7 +44,11 @@ export default function CategoriesPosts() {
   const categories = Object.keys(CATEGORY_COLORS);
 
   useEffect(() => {
-    const q = query(collection(db, "posts"), where("status", "==", "available"), orderBy("createdAt", "desc"));
+    const q = query(
+      collection(db, "posts"),
+      where("status", "==", "available"),
+      orderBy("createdAt", "desc")
+    );
     const unsub = onSnapshot(q, (snapshot) => {
       const fetched = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -78,7 +88,13 @@ export default function CategoriesPosts() {
 
   const renderHeader = () => (
     <>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start" }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "flex-start",
+        }}
+      >
         <Text variant="headlineMedium" style={{ fontWeight: "bold" }}>
           Browse
         </Text>
@@ -128,9 +144,7 @@ export default function CategoriesPosts() {
                   backgroundColor: theme.colors.primaryContainer,
                 },
               ]}
-              textStyle={
-                selected && { color: theme.colors.onPrimaryContainer }
-              }
+              textStyle={selected && { color: theme.colors.onPrimaryContainer }}
             >
               {cat}
             </Chip>
@@ -147,7 +161,10 @@ export default function CategoriesPosts() {
       </View>
       <FlatList
         style={{ backgroundColor: theme.colors.background }}
-        contentContainerStyle={{ paddingHorizontal: 16, backgroundColor: theme.colors.background }}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          backgroundColor: theme.colors.background,
+        }}
         showsVerticalScrollIndicator={false}
         data={filteredPosts}
         numColumns={2}
@@ -155,16 +172,16 @@ export default function CategoriesPosts() {
         renderItem={({ item }) => (
           <View
             style={{
-              width: screenWidth * 0.44
+              width: screenWidth * 0.44,
             }}
           >
             <PostCard post={item} />
           </View>
         )}
-  ListHeaderComponent={renderHeader}
+        ListHeaderComponent={renderHeader}
         columnWrapperStyle={{ justifyContent: "space-between" }}
         ListEmptyComponent={
-          <Text style={{ textAlign: "center", marginTop: 280}}>
+          <Text style={{ textAlign: "center", marginTop: 280 }}>
             No posts found.
           </Text>
         }

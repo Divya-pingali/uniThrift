@@ -1,6 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { collection, doc, getDoc, onSnapshot, orderBy, query, where } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  orderBy,
+  query,
+  where,
+} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Dimensions, Pressable, ScrollView, View } from "react-native";
 import { FAB, Text, useTheme } from "react-native-paper";
@@ -37,7 +45,11 @@ export default function Home() {
     };
     fetchUserName();
 
-    const q = query(collection(db, "posts"), where("status", "==", "available"), orderBy("createdAt", "desc"));
+    const q = query(
+      collection(db, "posts"),
+      where("status", "==", "available"),
+      orderBy("createdAt", "desc")
+    );
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetched = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -51,11 +63,13 @@ export default function Home() {
 
   return (
     <>
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         style={{ backgroundColor: theme.colors.background }}
       >
-        <View style={{ marginTop: 24, marginBottom: 42, paddingHorizontal: 16 }}>
+        <View
+          style={{ marginTop: 24, marginBottom: 42, paddingHorizontal: 16 }}
+        >
           <Text variant="titleMedium">Welcome,</Text>
           <Text variant="headlineMedium" style={{ fontWeight: "bold" }}>
             {userName}
@@ -79,7 +93,10 @@ export default function Home() {
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16, marginBottom: 24 }}
+                contentContainerStyle={{
+                  paddingHorizontal: 16,
+                  marginBottom: 24,
+                }}
               >
                 {posts.slice(0, 10).map((post) => (
                   <View
@@ -138,7 +155,14 @@ export default function Home() {
                   }}
                 >
                   <Ionicons name={cat.icon} size={32} color={cat.iconColor} />
-                  <Text style={{ color: cat.textColor, fontWeight: "bold", marginTop: 8, textAlign: "center" }}>
+                  <Text
+                    style={{
+                      color: cat.textColor,
+                      fontWeight: "bold",
+                      marginTop: 8,
+                      textAlign: "center",
+                    }}
+                  >
                     {cat.display}
                   </Text>
                 </View>

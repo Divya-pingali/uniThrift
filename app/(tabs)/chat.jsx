@@ -15,7 +15,7 @@ import {
   ActivityIndicator,
   Searchbar,
   Text,
-  useTheme
+  useTheme,
 } from "react-native-paper";
 import { auth, db } from "../../firebaseConfig";
 
@@ -134,7 +134,13 @@ export default function ChatListScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start" }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "flex-start",
+        }}
+      >
         <Text variant="headlineMedium" style={styles.title}>
           Chats
         </Text>
@@ -148,7 +154,7 @@ export default function ChatListScreen() {
         placeholderTextColor={theme.colors.onSurfaceVariant}
         iconColor={theme.colors.primary}
       />
-      {(!chats || chats.length === 0) ? (
+      {!chats || chats.length === 0 ? (
         <View style={styles.center}>
           <Text>No conversations yet</Text>
         </View>
