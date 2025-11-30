@@ -3,12 +3,13 @@ import { useRouter } from "expo-router";
 import { collection, doc, getDoc, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Dimensions, Pressable, ScrollView, View } from "react-native";
-import { FAB, Text } from "react-native-paper";
+import { FAB, Text, useTheme } from "react-native-paper";
 import PostCard from "../../components/PostCard";
 import { auth, db } from "../../firebaseConfig";
 
 export default function Home() {
   const router = useRouter();
+  const theme = useTheme();
   const [posts, setPosts] = useState([]);
   const [userName, setUserName] = useState("");
 
@@ -50,7 +51,10 @@ export default function Home() {
 
   return (
     <>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        style={{ backgroundColor: theme.colors.background }}
+      >
         <View style={{ marginTop: 24, marginBottom: 42, paddingHorizontal: 16 }}>
           <Text variant="titleMedium">Welcome,</Text>
           <Text variant="headlineMedium" style={{ fontWeight: "bold" }}>
@@ -75,12 +79,12 @@ export default function Home() {
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16 }}
+                contentContainerStyle={{ paddingHorizontal: 16, marginBottom: 24 }}
               >
                 {posts.slice(0, 10).map((post) => (
                   <View
                     key={post.id}
-                    style={{ width: screenWidth * 0.44 }}
+                    style={{ width: screenWidth * 0.44, marginRight: 12 }}
                   >
                     <PostCard post={post} />
                   </View>
@@ -96,7 +100,7 @@ export default function Home() {
               paddingHorizontal: 16,
             }}
           >
-            Search by Category
+            Browse by Category
           </Text>
 
           <View
@@ -150,10 +154,10 @@ export default function Home() {
           position: "absolute",
           bottom: 20,
           right: 20,
-          backgroundColor: "#6750A4",
+          backgroundColor: theme.colors.primary,
         }}
         onPress={() => router.push("/postSearch")}
-        color="white"
+        color={theme.colors.onPrimary}
       />
     </>
   );

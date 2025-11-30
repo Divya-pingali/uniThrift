@@ -28,6 +28,8 @@ export default function AppSnackbar({
         borderRadius: 10,
         paddingHorizontal: 16,
         marginBottom: 20,
+        zIndex: 1000,
+        bottom: 50,
       }}
       action={{
         label: "OK",

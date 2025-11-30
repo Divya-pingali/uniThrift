@@ -29,8 +29,7 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.divyapingali.unithrift",
         "googleServicesFile": "./google-services.json",
-        "softwareKeyboardLayoutMode": "resize",
-        "windowSoftInputMode": "adjustResize"
+        "softwareKeyboardLayoutMode": "resize"
       },
 
       "web": {

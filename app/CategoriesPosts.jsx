@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { collection, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
@@ -7,10 +8,11 @@ import {
   LayoutAnimation,
   Platform,
   ScrollView,
+  StyleSheet,
   UIManager,
   View,
 } from "react-native";
-import { Chip, Text } from "react-native-paper";
+import { Chip, Text, useTheme } from "react-native-paper";
 import PostCard from "../components/PostCard";
 import { db } from "../firebaseConfig";
 
@@ -24,6 +26,7 @@ if (
 export default function CategoriesPosts() {
   const params = useLocalSearchParams();
   const initialSelected = decodeURIComponent(params.selected || "");
+  const theme = useTheme();
 
   const [selectedCategories, setSelectedCategories] = useState(
     initialSelected ? [initialSelected] : []
@@ -85,11 +88,18 @@ export default function CategoriesPosts() {
         variant="headlineMedium"
         style={{
           fontWeight: "bold",
-          marginTop: 42,
-          marginBottom: 20,
+          marginTop: 24
         }}
       >
-        Select Categories
+        Browse
+      </Text>
+      <Text
+        variant="titleMedium"
+        style={{
+          marginBottom: 18,
+        }}
+      >
+        Select categories
       </Text>
 
       <ScrollView
@@ -108,26 +118,29 @@ export default function CategoriesPosts() {
               key={cat}
               mode="outlined"
               selected={selected}
+              selectedColor={theme.colors.primary}
               onPress={() => toggleCategory(cat)}
+              icon={() => (
+                <Ionicons
+                  name={selected ? "checkmark" : null}
+                  size={16}
+                  color={
+                    selected
+                      ? theme.colors.onPrimaryContainer
+                      : theme.colors.primary
+                  }
+                />
+              )}
               style={[
-                {
-                  marginRight: 8,
-                  borderColor: "#6750A4",
-                },
+                styles.chip,
+                { borderColor: theme.colors.primary },
                 selected && {
-                  backgroundColor: "rgba(103,80,164,0.16)",
-                  borderColor: "#6750A4",
+                  backgroundColor: theme.colors.primaryContainer,
                 },
               ]}
-              textStyle={[
-                {
-                  color: "#6750A4",
-                  fontWeight: "500",
-                },
-                selected && {
-                  color: "#000",
-                },
-              ]}
+              textStyle={
+                selected && { color: theme.colors.onPrimaryContainer }
+              }
             >
               {cat}
             </Chip>
@@ -138,7 +151,7 @@ export default function CategoriesPosts() {
   );
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <FlatList
         showsVerticalScrollIndicator={false}
         data={filteredPosts}
@@ -165,3 +178,9 @@ export default function CategoriesPosts() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  chip: {
+    marginRight: 8,
+  },
+});

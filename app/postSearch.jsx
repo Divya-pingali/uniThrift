@@ -1,21 +1,22 @@
 import { useRouter } from "expo-router";
 import {
-    collection,
-    endAt,
-    getDocs,
-    limit,
-    orderBy,
-    query,
-    startAt
+  collection,
+  endAt,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  startAt
 } from "firebase/firestore";
 import { useRef, useState } from "react";
 import { Dimensions, FlatList, Pressable, View } from "react-native";
-import { ActivityIndicator, Searchbar, Text } from "react-native-paper";
+import { ActivityIndicator, Searchbar, Text, useTheme } from "react-native-paper";
 import PostCard from "../components/PostCard";
 import { db } from "../firebaseConfig";
 
 export default function PostSearchScreen() {
   const router = useRouter();
+  const theme = useTheme();
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [results, setResults] = useState([]);
@@ -96,7 +97,7 @@ export default function PostSearchScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "white" }}>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <Searchbar
         placeholder="Search posts…"
         value={search}
@@ -105,13 +106,17 @@ export default function PostSearchScreen() {
           setSuggestions([]);
           searchPosts(search);
         }}
-        style={{ margin: 14 }}
+        style={{ margin: 14, backgroundColor: theme.colors.surfaceContainerLow }}
+        inputStyle={{ color: theme.colors.onSurface }}
+        placeholderTextColor={theme.colors.onSurfaceVariant}
+        iconColor={theme.colors.primary}
+        autoFocus
       />
       {suggestions.length > 0 && (
         <View
           style={{
             marginHorizontal: 14,
-            backgroundColor: "white",
+            backgroundColor: theme.colors.surfaceContainerLow,
             borderRadius: 8,
             paddingVertical: 8,
           }}
@@ -120,9 +125,14 @@ export default function PostSearchScreen() {
             <Pressable
               key={item.id}
               onPress={() => selectSuggestion(item)}
-              style={{ padding: 12 }}
+              style={({ pressed }) => [
+                { padding: 12 },
+                pressed && { backgroundColor: theme.colors.surfaceDisabled },
+              ]}
             >
-              <Text style={{ fontSize: 16 }}>{item.title}</Text>
+              <Text style={{ fontSize: 16, color: theme.colors.onSurface }}>
+                {item.title}
+              </Text>
             </Pressable>
           ))}
         </View>

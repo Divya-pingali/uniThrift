@@ -16,7 +16,13 @@ import {
   StyleSheet,
   View
 } from "react-native";
-import { GiftedChat } from "react-native-gifted-chat";
+import {
+  Bubble,
+  Composer,
+  GiftedChat,
+  InputToolbar,
+  Send,
+} from "react-native-gifted-chat";
 import {
   ActivityIndicator,
   Button,
@@ -24,6 +30,7 @@ import {
   IconButton,
   Portal,
   Text,
+  useTheme,
 } from "react-native-paper";
 import { auth, db } from "../../firebaseConfig";
 
@@ -31,6 +38,8 @@ export default function ChatScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { chatId, otherUserId, otherUserName, postId, productTitle } = params;
+  const theme = useTheme();
+  const styles = makeStyles(theme);
 
   const firebaseUser = auth.currentUser;
 
@@ -191,7 +200,7 @@ export default function ChatScreen() {
 
   if (!messages || !post) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator />
       </View>
     );
@@ -200,23 +209,32 @@ export default function ChatScreen() {
   const infoMessage = getInfoMessage();
 
   return (
-    //<KeyboardAvoidingView
-      //style={{ flex: 1 }}
-      //behavior={Platform.OS === "ios" ? "padding" : "height"}
-      //keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-    //>
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={styles.header}>
-        <Ionicons name="person-circle-outline" size={42} color="#777" />
+        <Ionicons
+          name="person-circle-outline"
+          size={42}
+          color={theme.colors.onSurfaceVariant}
+        />
 
-        <View style={{ flexDirection: "row", justifyContent: "space-between", flex: 1 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            flex: 1,
+          }}
+        >
           <View style={{ marginLeft: 10 }}>
             <Text style={styles.username}>{otherUserName}</Text>
             <Text style={styles.product}>{productTitle}</Text>
           </View>
 
           {isSeller && post.status === "available" && (
-            <Button mode="contained" onPress={reserveItem} style={styles.smallBtn}>
+            <Button
+              mode="contained"
+              onPress={reserveItem}
+              style={styles.smallBtn}
+            >
               Reserve
             </Button>
           )}
@@ -226,11 +244,15 @@ export default function ChatScreen() {
               <Ionicons
                 name="qr-code-outline"
                 size={32}
-                color="#4b7bec"
+                color={theme.colors.primary}
                 style={styles.qrIcon}
                 onPress={goToSellerQR}
               />
-              <IconButton icon="close" onPress={() => setShowCancelDialog(true)} />
+              <IconButton
+                icon="close"
+                onPress={() => setShowCancelDialog(true)}
+                iconColor={theme.colors.onSurfaceVariant}
+              />
             </View>
           )}
 
@@ -238,7 +260,7 @@ export default function ChatScreen() {
             <Ionicons
               name="scan-outline"
               size={32}
-              color="#4b7bec"
+              color={theme.colors.primary}
               style={styles.qrIcon}
               onPress={goToScanQR}
             />
@@ -254,11 +276,14 @@ export default function ChatScreen() {
 
       {infoMessage && (
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle-outline" size={20} color="#555" />
+          <Ionicons
+            name="information-circle-outline"
+            size={20}
+            color={theme.colors.onSurfaceVariant}
+          />
           <Text style={styles.infoText}>{infoMessage}</Text>
         </View>
       )}
-
       <GiftedChat
         messages={messages}
         onSend={(msgs) => handleSend(msgs)}
@@ -267,18 +292,76 @@ export default function ChatScreen() {
           name: userName || "You",
         }}
         renderAvatar={() => (
-          <Ionicons name="person-circle-outline" size={32} color="#999" />
+          <Ionicons
+            name="person-circle-outline"
+            size={32}
+            color={theme.colors.onSurfaceVariant}
+          />
         )}
         renderUsernameOnMessage
         placeholder="Type a message…"
         alwaysShowSend
+        keyboardAvoidingViewProps={{
+          behavior: "height",
+          keyboardVerticalOffset: 180,
+        }}
+        renderBubble={(props) => (
+          <Bubble
+            {...props}
+            wrapperStyle={{
+              left: {
+                backgroundColor: theme.colors.surfaceContainer,
+              },
+              right: {
+                backgroundColor: theme.colors.primary,
+              },
+            }}
+            textStyle={{
+              left: {
+                color: theme.colors.onSurface,
+              },
+              right: {
+                color: theme.colors.onPrimary,
+              },
+            }}
+          />
+        )}
+        renderInputToolbar={(props) => (
+          <InputToolbar
+            {...props}
+            containerStyle={{
+              backgroundColor: theme.colors.surface,
+              borderTopColor: theme.colors.outlineVariant,
+            }}
+          />
+        )}
+        renderComposer={(props) => (
+          <Composer
+            {...props}
+            textInputStyle={{
+              color: theme.colors.onSurface,
+              ...styles.composer,
+            }}
+            placeholderTextColor={theme.colors.onSurfaceVariant}
+          />
+        )}
+        renderSend={(props) => (
+          <Send {...props} containerStyle={styles.sendContainer}>
+            <Ionicons name="send" size={24} color={theme.colors.primary} />
+          </Send>
+        )}
       />
-
       <Portal>
-        <Dialog visible={showCancelDialog} onDismiss={() => setShowCancelDialog(false)}>
+        <Dialog
+          visible={showCancelDialog}
+          onDismiss={() => setShowCancelDialog(false)}
+          style={{ backgroundColor: theme.colors.surfaceContainerHighest }}
+        >
           <Dialog.Title>Cancel Reservation</Dialog.Title>
           <Dialog.Content>
-            <Text>Are you sure you want to cancel this reservation?</Text>
+            <Text variant="bodyMedium">
+              Are you sure you want to cancel this reservation?
+            </Text>
           </Dialog.Content>
           <Dialog.Actions>
             <Button onPress={() => setShowCancelDialog(false)}>No</Button>
@@ -289,35 +372,49 @@ export default function ChatScreen() {
         </Dialog>
       </Portal>
     </View>
-    //</KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  header: {
-    paddingTop: 40,
-    paddingBottom: 10,
-    paddingHorizontal: 16,
-    backgroundColor: "white",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  username: { fontWeight: "bold", fontSize: 18, color: "#222" },
-  product: { fontSize: 14, color: "#666" },
-  infoBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f1f1f5",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderBottomColor: "#ddd",
-    borderBottomWidth: 1,
-  },
-  infoText: { marginLeft: 10, fontSize: 14, color: "#555", flexShrink: 1 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  smallBtn: { paddingHorizontal: 10, borderRadius: 8 },
-  rightActions: { flexDirection: "row", alignItems: "center" },
-  qrIcon: { marginHorizontal: 12 },
-});
+const makeStyles = (theme) =>
+  StyleSheet.create({
+    header: {
+      paddingTop: 40,
+      paddingBottom: 10,
+      paddingHorizontal: 16,
+      backgroundColor: theme.colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outlineVariant,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    username: {
+      fontWeight: "bold",
+      fontSize: 18,
+      color: theme.colors.onSurface,
+    },
+    product: { fontSize: 14, color: theme.colors.onSurfaceVariant },
+    infoBox: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.colors.surfaceContainerLow,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderBottomColor: theme.colors.outlineVariant,
+      borderBottomWidth: 1,
+    },
+    infoText: {
+      marginLeft: 10,
+      fontSize: 14,
+      color: theme.colors.onSurfaceVariant,
+      flexShrink: 1,
+    },
+    center: { flex: 1, justifyContent: "center", alignItems: "center" },
+    smallBtn: { paddingHorizontal: 10, borderRadius: 8 },
+    rightActions: { flexDirection: "row", alignItems: "center" },
+    qrIcon: { marginHorizontal: 12 },
+    composer: {
+      paddingTop: 8,
+    },
+    sendContainer: {
+      margin: 8
+    },
+  });

@@ -2,14 +2,16 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
-import { Button, Dialog, Portal, Text, TextInput } from "react-native-paper";
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from "react-native";
+import { Button, Dialog, Portal, Text, TextInput, useTheme } from "react-native-paper";
 import AppSnackbar from "../components/Snackbar";
 import { auth, db } from "../firebaseConfig";
 
 export default function SignUp() {
   const params = useLocalSearchParams();
   const router = useRouter();
+  const theme = useTheme();
+  const styles = makeStyles(theme);
   const imagePathRef = useRef(`users/${Date.now()}.jpg`);
   const [userData, setUserData] = useState({
     email: params.email || "",
@@ -109,7 +111,7 @@ export default function SignUp() {
     <>
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={"height"}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.logoContainer}>
@@ -117,7 +119,7 @@ export default function SignUp() {
               Create Account
             </Text>
             <Text variant="bodyMedium" style={styles.componentDescription}>
-              Please fill out your details to sign up.
+              Please enter your details to sign up.
             </Text>
           </View>
           <View style={styles.form}>
@@ -181,7 +183,8 @@ export default function SignUp() {
             />
           </View>
         </ScrollView>
-        <Button 
+        <View style={styles.buttonContainer}>
+          <Button 
             mode="contained" 
             onPress={signUp} 
             style={styles.button}
@@ -189,25 +192,18 @@ export default function SignUp() {
           >
             Create Account
           </Button>
+        </View>
         <Portal>
-          <Dialog visible={dialogVisible} onDismiss={hideDialog}>
-            <Dialog.Title variant="bodyLarge" style={styles.header}>{dialogTitle}</Dialog.Title>
+          <Dialog visible={dialogVisible} onDismiss={hideDialog} style={{ backgroundColor: theme.colors.surface }}>
+            <Dialog.Title variant="bodyLarge" style={[styles.header, { color: theme.colors.onSurface }]}>{dialogTitle}</Dialog.Title>
             <Dialog.Content>
-              <Text variant="bodyMedium" style={styles.componentDescription}>{dialogMessage}</Text>
+              <Text variant="bodyMedium" style={[styles.componentDescription, { color: theme.colors.onSurfaceVariant }]}>{dialogMessage}</Text>
             </Dialog.Content>
             <Dialog.Actions>
               <Button onPress={hideDialog} style={{ margin: 16, fontSize: 20 }}>OK</Button>
             </Dialog.Actions>
           </Dialog>
         </Portal>
-        <Snackbar
-          visible={successVisible}
-          onDismiss={() => setSuccessVisible(false)}
-          duration={2500}
-          style={{ backgroundColor: '#2e7d32' }}
-        >
-          {successMessage}
-        </Snackbar>
         <AppSnackbar
           visible={successVisible}
           onDismiss={() => setSuccessVisible(false)}
@@ -220,10 +216,10 @@ export default function SignUp() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (theme) => StyleSheet.create({
   keyboardView: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background,
   },
   content: {
     padding: 16,
@@ -235,13 +231,15 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   header: {
-    marginBottom: 16,
-    fontWeight: "600",
+    marginTop: 24,
+    marginBottom: 8,
+    fontWeight: "800",
     textAlign: "center",
+    color: theme.colors.onBackground,
   },
   componentDescription: {
     marginBottom: 20,
-    color: '#49454F',
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
   },
   form: {
@@ -251,17 +249,19 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: 24,
   },
+  buttonContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
   button: {
-    margin: 8,
-    width: "45%",
-    alignSelf: 'flex-end',
-    borderRadius: 4,
+    borderRadius: 16,
     height: 45,
     justifyContent: 'center',
   },
   label: {
     marginBottom: 4,
     fontWeight: '500',
+    color: theme.colors.onBackground,
   },
   imageContainer: {
     alignItems: 'center',
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     height: 180,
   },
   errorText: {
-    color: '#B00020',
+    color: theme.colors.error,
     marginBottom: 12,
     marginLeft: 4,
     fontSize: 14,

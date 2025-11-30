@@ -4,7 +4,14 @@ import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { useState } from "react";
 import { View } from "react-native";
-import { Button, Card, Dialog, Portal, Text } from "react-native-paper";
+import {
+  Button,
+  Card,
+  Dialog,
+  Portal,
+  Text,
+  useTheme,
+} from "react-native-paper";
 import { auth, db, functions } from "../firebaseConfig";
 
 export default function Checkout() {
@@ -23,6 +30,7 @@ export default function Checkout() {
   const [showPaymentFailedDialog, setShowPaymentFailedDialog] = useState(false);
   const [paymentFailedMsg, setPaymentFailedMsg] = useState("");
   const router = useRouter();
+  const theme = useTheme();
 
   const showSnackbar = (msg) => {
     setSnackbarMsg(msg);
@@ -127,7 +135,7 @@ export default function Checkout() {
   };
 
   return (
-    <View style={{ padding: 20 }}>
+    <View style={{ padding: 20, flex: 1, backgroundColor: theme.colors.background }}>
       <Card
         style={{
           alignItems: "center",
@@ -135,6 +143,7 @@ export default function Checkout() {
           paddingVertical: 20,
           borderRadius: 12,
           elevation: 4,
+          backgroundColor: theme.colors.surface,
         }}
       >
         <Text
@@ -143,16 +152,29 @@ export default function Checkout() {
             fontWeight: "bold",
             alignSelf: "center",
             marginVertical: 20,
+            color: theme.colors.onSurface,
           }}
         >
           Checkout
         </Text>
         <Card.Content>
-          <Text variant="bodyMedium" style={{ textAlign: "center" }}>
+          <Text
+            variant="bodyMedium"
+            style={{ textAlign: "center", color: theme.colors.onSurfaceVariant }}
+          >
             You are about to pay{" "}
-            <Text style={{ fontWeight: "bold" }}>${price}</Text> for{" "}
-            <Text style={{ fontWeight: "bold" }}>{productTitle}</Text> to{" "}
-            <Text style={{ fontWeight: "bold" }}>{otherUserName}</Text>.
+            <Text style={{ fontWeight: "bold", color: theme.colors.onSurface }}>
+              ${price}
+            </Text>{" "}
+            for{" "}
+            <Text style={{ fontWeight: "bold", color: theme.colors.onSurface }}>
+              {productTitle}
+            </Text>{" "}
+            to{" "}
+            <Text style={{ fontWeight: "bold", color: theme.colors.onSurface }}>
+              {otherUserName}
+            </Text>
+            .
           </Text>
           <View
             style={{
@@ -188,13 +210,25 @@ export default function Checkout() {
         </Card.Content>
       </Card>
       <Portal>
-        <Dialog visible={showPaymentFailedDialog} onDismiss={handlePaymentFailedDialogOk}>
-          <Dialog.Title>Payment Failed</Dialog.Title>
+        <Dialog
+          visible={showPaymentFailedDialog}
+          onDismiss={handlePaymentFailedDialogOk}
+          style={{ backgroundColor: theme.colors.surface }}
+        >
+          <Dialog.Title style={{ color: theme.colors.onSurface }}>
+            Payment Failed
+          </Dialog.Title>
           <Dialog.Content>
-            <Text>{paymentFailedMsg || "Payment could not be completed."}</Text>
+            <Text style={{ color: theme.colors.onSurfaceVariant }}>
+              {paymentFailedMsg || "Payment could not be completed."}
+            </Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={handlePaymentFailedDialogOk} mode="contained" style={{ borderRadius: 8, paddingHorizontal: 10 }}>
+            <Button
+              onPress={handlePaymentFailedDialogOk}
+              mode="contained"
+              style={{ borderRadius: 8, paddingHorizontal: 10 }}
+            >
               OK
             </Button>
           </Dialog.Actions>

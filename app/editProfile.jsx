@@ -3,12 +3,15 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
-import { Button, Dialog, Portal, Text, TextInput } from "react-native-paper";
+import { Button, Dialog, Portal, Text, TextInput, useTheme } from "react-native-paper";
 import EditableImage from "../components/EditableImage";
 import AppSnackbar from "../components/Snackbar";
 import { auth, db, firebaseStorage } from "../firebaseConfig";
 
 export default function EditProfile() {
+  const theme = useTheme();
+  const styles = getStyles(theme);
+
   const [userData, setUserData] = useState({
     email: "",
     name: "",
@@ -93,7 +96,11 @@ export default function EditProfile() {
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.headerContainer}>
             <Text variant="headlineMedium" style={styles.header}>
               Edit Profile
@@ -148,49 +155,44 @@ export default function EditProfile() {
               keyboardType="number-pad"
               maxLength={15}
             />
-            <Button
-              mode="contained"
-              onPress={handleSave}
-              style={styles.button}
-            >
-              Save Changes
-            </Button>
           </View>
-          <Portal>
-            <Dialog visible={dialogVisible} onDismiss={hideDialog}>
-              <Dialog.Title variant="bodyLarge" style={styles.header}>{dialogTitle}</Dialog.Title>
-              <Dialog.Content>
-                <Text variant="bodyMedium" style={styles.componentDescription}>{dialogMessage}</Text>
-              </Dialog.Content>
-              <Dialog.Actions>
-                <Button onPress={hideDialog} style={{ margin: 16, fontSize: 20 }}>OK</Button>
-              </Dialog.Actions>
-            </Dialog>
-          </Portal>
-          <Snackbar
-            visible={successVisible}
-            onDismiss={() => setSuccessVisible(false)}
-            duration={2500}
-            style={{ backgroundColor: '#2e7d32' }}
-          >
-            {successMessage}
-          </Snackbar>
-          <AppSnackbar
-            visible={successVisible}
-            onDismiss={() => setSuccessVisible(false)}
-            message={successMessage}
-            type="success"
-            duration={2500}
-          />
         </ScrollView>
       </KeyboardAvoidingView>
+      <View style={styles.bottomContainer}>
+        <AppSnackbar
+          visible={successVisible}
+          onDismiss={() => setSuccessVisible(false)}
+          message={successMessage}
+          type="success"
+          duration={2500}
+        />
+        <Button
+          mode="contained"
+          onPress={handleSave}
+          style={styles.button}
+        >
+          Save Changes
+        </Button>
+      </View>
+      <Portal>
+        <Dialog visible={dialogVisible} onDismiss={hideDialog}>
+          <Dialog.Title variant="bodyLarge" style={styles.header}>{dialogTitle}</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium" style={styles.componentDescription}>{dialogMessage}</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={hideDialog} style={{ margin: 16, fontSize: 20 }}>OK</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   keyboardView: {
     flex: 1,
+    backgroundColor: theme.colors.background,
   },
   content: {
     padding: 16,
@@ -198,14 +200,15 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     alignItems: "flex-start",
-    marginTop: 24,
+    marginTop: 8,
     marginBottom: 16,
   },
   header: {
     fontWeight: "bold",
   },
   subHeader: {
-    color: '#49454F',
+    color: theme.colors.onSurfaceVariant,
+    marginBottom: 16,
   },
   form: {
     width: "100%",
@@ -215,13 +218,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emailText: {
-    color: "gray",
+    color: theme.colors.onSurfaceVariant,
     fontWeight: "800",
     fontSize: 16,
     marginBottom: 16,
   },
   button: {
-    margin: 8,
     width: "90%",
     alignSelf: "center",
     borderRadius: 16,
@@ -233,15 +235,22 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   errorText: {
-    color: '#B00020',
+    color: theme.colors.error,
     marginBottom: 12,
     marginLeft: 4,
     fontSize: 14,
   },
   imageContainer: {
     alignItems: 'center',
+    alignSelf: 'center',
     marginBottom: 16,
     width: '100%',
-    height: 180,
+    height: 150,
+    width: 150,
+    borderRadius: 120,
   },
+  bottomContainer: {
+    padding: 8,
+    backgroundColor: theme.colors.background,
+  }
 });

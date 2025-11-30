@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
   collection,
@@ -11,12 +11,19 @@ import {
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Searchbar, Text } from "react-native-paper";
+import {
+  ActivityIndicator,
+  Searchbar,
+  Text,
+  useTheme,
+} from "react-native-paper";
 import { auth, db } from "../../firebaseConfig";
 
 export default function ChatListScreen() {
   const router = useRouter();
   const firebaseUser = auth.currentUser;
+  const theme = useTheme();
+  const styles = makeStyles(theme);
 
   const [chats, setChats] = useState([]);
   const [filteredChats, setFilteredChats] = useState([]);
@@ -131,13 +138,16 @@ export default function ChatListScreen() {
     return (
       <View style={styles.container}>
         <Text variant="headlineMedium" style={styles.title}>
-          Chat
+          Chats
         </Text>
         <Searchbar
-          placeholder="Search conversations…"
+          placeholder="Search chats"
           value={search}
           onChangeText={handleSearch}
-          style={{ marginBottom: 8 }}
+          style={styles.searchbar}
+          inputStyle={{ color: theme.colors.onSurface }}
+          placeholderTextColor={theme.colors.onSurfaceVariant}
+          iconColor={theme.colors.primary}
         />
         <View style={styles.center}>
           <Text>No conversations yet</Text>
@@ -148,20 +158,23 @@ export default function ChatListScreen() {
   return (
     <View style={styles.container}>
       <Text variant="headlineMedium" style={styles.title}>
-        Conversations
+        Chats
       </Text>
       <Searchbar
-        placeholder="Search conversations…"
+        placeholder="Search chats"
         value={search}
         onChangeText={handleSearch}
-        style={{ marginBottom: 8 }}
+        style={styles.searchbar}
+        inputStyle={{ color: theme.colors.onSurface }}
+        placeholderTextColor={theme.colors.onSurfaceVariant}
+        iconColor={theme.colors.primary}
       />
 
       <FlatList
         data={filteredChats}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => (
-          <View style={{ height: 1, backgroundColor: "#eee" }} />
+          <View style={{ height: 1, backgroundColor: theme.colors.outlineVariant }} />
         )}
         renderItem={({ item }) => {
           const otherUserId = item.participants.find(
@@ -200,11 +213,15 @@ export default function ChatListScreen() {
               }
               style={({ pressed }) => [
                 styles.row,
-                pressed && { backgroundColor: "#f4f4f4" },
+                pressed && { backgroundColor: theme.colors.surfaceDisabled },
               ]}
             >
               <View style={styles.avatarContainer}>
-                <Ionicons name="person-circle-outline" size={48} color="#999" />
+                <Ionicons
+                  name="person-circle"
+                  size={48}
+                  color={theme.colors.primary}
+                />
               </View>
 
               <View style={styles.content}>
@@ -229,63 +246,69 @@ export default function ChatListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 24,
-    backgroundColor: "white",
-  },
-  title: {
-    fontWeight: "bold",
-    marginBottom: 12,
-  },
-  row: {
-    flexDirection: "row",
-    paddingVertical: 14,
-    backgroundColor: "white",
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarContainer: {
-    marginRight: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#222",
-  },
-  time: {
-    fontSize: 12,
-    color: "#999",
-  },
-  productTag: {
-    alignSelf: "flex-start",
-    backgroundColor: "#F2F4F7",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#333",
-    marginBottom: 6,
-  },
-  message: {
-    fontSize: 13,
-    color: "#666",
-  },
-});
+const makeStyles = (theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingHorizontal: 16,
+      paddingTop: 24,
+      backgroundColor: theme.colors.surface,
+    },
+    title: {
+      fontWeight: "bold",
+      marginBottom: 12,
+      color: theme.colors.onSurface,
+    },
+    searchbar: {
+      marginBottom: 8,
+      backgroundColor: theme.colors.surfaceContainerLow,
+    },
+    row: {
+      flexDirection: "row",
+      paddingVertical: 14,
+      backgroundColor: theme.colors.surface,
+    },
+    center: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    avatarContainer: {
+      marginRight: 12,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    content: {
+      flex: 1,
+      justifyContent: "center",
+    },
+    topRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: 4,
+    },
+    name: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: theme.colors.onSurface,
+    },
+    time: {
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+    },
+    productTag: {
+      alignSelf: "flex-start",
+      backgroundColor: theme.colors.primaryContainer,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
+      fontSize: 13,
+      fontWeight: "500",
+      color: theme.colors.onPrimaryContainer,
+      marginBottom: 6,
+    },
+    message: {
+      fontSize: 13,
+      color: theme.colors.onSurfaceVariant,
+    },
+  });

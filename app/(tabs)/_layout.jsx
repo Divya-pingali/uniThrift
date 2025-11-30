@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tabs, usePathname, useRouter } from "expo-router";
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet } from "react-native";
+import { useTheme } from "react-native-paper";
 import CreateListing from "../../components/CreateListing";
 
 export default function TabsLayout() {
@@ -9,6 +10,7 @@ export default function TabsLayout() {
   const router = useRouter();
   const pathname = usePathname();
   const hideTabBar = pathname === "/post" || pathname.startsWith("/post/");
+  const theme = useTheme();
 
   return (
     <>
@@ -19,7 +21,7 @@ export default function TabsLayout() {
         onRequestClose={() => setShowListingModal(false)}
       >
         <Pressable
-          style={styles.modalBackground}
+          style={[styles.modalBackground, { backgroundColor: theme.colors.backdrop }]}
           onPress={() => setShowListingModal(false)}
         >
           <Pressable style={styles.bottomContainer} onPress={() => {}}>
@@ -35,10 +37,10 @@ export default function TabsLayout() {
 
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: "#6200ee",
-          tabBarInactiveTintColor: "#858585",
+          tabBarActiveTintColor: theme.colors.primary,
+          tabBarInactiveTintColor: theme.colors.outline,
           headerShown: false,
-          tabBarStyle: hideTabBar ? { display: 'none' } : undefined,
+          tabBarStyle: hideTabBar ? { display: 'none' } : { backgroundColor: theme.colors.surface },
         }}
       >
         <Tabs.Screen 
@@ -103,7 +105,6 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   modalBackground: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
     justifyContent: "flex-end",
   }
 });

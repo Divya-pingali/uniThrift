@@ -4,12 +4,13 @@ import { getAuth } from "firebase/auth";
 import { collection, doc, getDoc, getFirestore, onSnapshot, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Dimensions, FlatList, Image, StyleSheet, TouchableHighlight, View } from "react-native";
-import { Button, Text } from "react-native-paper";
+import { Button, Text, useTheme } from "react-native-paper";
 import PostCard from "../../components/PostCard";
 import { auth } from "../../firebaseConfig";
 
 export default function Profile() {
   const router = useRouter();
+  const theme = useTheme();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
@@ -74,33 +75,33 @@ export default function Profile() {
     <>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
         <Text variant="headlineMedium" style={{ fontWeight: "bold" }}>Profile</Text>
-        <Button mode="text" onPress={signOut} textColor="red">Sign Out</Button>
+        <Button mode="text" onPress={signOut} textColor={theme.colors.error}>Sign Out</Button>
       </View>
 
       <TouchableHighlight
         onPress={() => router.push("/editProfile")}
         underlayColor="rgba(0,0,0,0.1)"
-        style={styles.touchableCard}
+        style={styles(theme).touchableCard}
       >
-        <View style={styles.profileCard}>
-          <View style={styles.imageContainer}>
+        <View style={styles(theme).profileCard}>
+          <View style={styles(theme).imageContainer}>
             {userImage ? (
-              <Image source={{ uri: userImage }} style={styles.profileImage} />
+              <Image source={{ uri: userImage }} style={styles(theme).profileImage} />
             ) : (
-              <Ionicons name="person-circle" size={120} color="#ccc" style={styles.defaultImage} />
+              <Ionicons name="person-circle" size={120} color="#ccc" style={styles(theme).defaultImage} />
             )}
           </View>
-          <View style={styles.textContainer}>
-            <Text variant="headlineSmall" style={styles.userName}>{userName}</Text>
-            {userEmail && <Text variant="bodySmall" style={styles.userEmail}>{userEmail}</Text>}
-            {userBio && <Text variant="bodySmall" style={styles.userBio}>{userBio}</Text>}
+          <View style={styles(theme).textContainer}>
+            <Text variant="headlineSmall" style={styles(theme).userName}>{userName}</Text>
+            {userEmail && <Text variant="bodySmall" style={styles(theme).userEmail}>{userEmail}</Text>}
+            {userBio && <Text variant="bodySmall" style={styles(theme).userBio}>{userBio}</Text>}
           </View>
         </View>
       </TouchableHighlight>
 
       <Text
         variant="titleLarge"
-        style={{ fontWeight: "bold", marginBottom: 12, marginTop: 24 }}
+        style={{ fontWeight: "bold", marginBottom: 12, marginTop: 42 }}
       >
         Your Posts
       </Text>
@@ -109,7 +110,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={styles(theme).container}>
         {renderHeader()}
         <Text>Loading...</Text>
       </View>
@@ -117,7 +118,7 @@ export default function Profile() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles(theme).container}>
       <FlatList
         data={posts}
         numColumns={2}
@@ -137,11 +138,12 @@ export default function Profile() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 24,
+    backgroundColor: theme.colors.background
   },
   title: {
     fontWeight: "600",
@@ -153,7 +155,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   profileCard: {
-    backgroundColor: "white",
+    backgroundColor: theme.colors.surfaceContainerLowest,
     borderRadius: 16,
     padding: 8,
     elevation: 4,
@@ -196,13 +198,13 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   userEmail: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     fontWeight: '700',
     marginBottom: 8,
   },
   userBio: {
-    color: '#666',
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
   }
 });

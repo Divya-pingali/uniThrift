@@ -4,7 +4,7 @@ import { useLocalSearchParams } from "expo-router";
 import { addDoc, collection, doc, getDoc, getDocs, query, serverTimestamp, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, View } from "react-native";
-import { Button, Text } from "react-native-paper";
+import { Button, Divider, Text, useTheme } from "react-native-paper";
 import { db } from "../firebaseConfig";
 
 import { useRouter } from "expo-router";
@@ -16,7 +16,11 @@ export default function PostDetail() {
   const { id } = useLocalSearchParams();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState("");
+  const [userBio, setUserBio] = useState("");
+  const [userImage, setUserImage] = useState("");
   const MAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const theme = useTheme();
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -27,6 +31,22 @@ export default function PostDetail() {
     };
     fetchPost();
   }, [id]);
+
+  // Fetch seller user details after post is loaded
+  useEffect(() => {
+    async function fetchUserDetails() {
+      if (!post?.userId) return;
+      const userRef = doc(db, "users", post.userId);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        setUserName(data.name || "");
+        setUserBio(data.bio || "");
+        setUserImage(data.image || "");
+      }
+    }
+    fetchUserDetails();
+  }, [post]);
 
   const placeId = post?.location?.placeId;
   const queryText =
@@ -111,13 +131,17 @@ async function startChat() {
 }
 
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       {loading || !post ? (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" />
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.colors.background }}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 24 }} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={{ backgroundColor: theme.colors.background }}
+          contentContainerStyle={{ padding: 24 }}
+          showsVerticalScrollIndicator={false}
+        >
           <Image
             source={{ uri: post.image }}
             style={{ width: "100%", height: 450, borderRadius: 8, marginBottom: 12 }}
@@ -138,7 +162,7 @@ async function startChat() {
                 <View
                   key={index}
                   style={{
-                    backgroundColor: "rgba(0, 0, 0, 0.05)",
+                    backgroundColor: theme.colors.surfaceVariant,
                     borderRadius: 6,
                     paddingVertical: 4,
                     paddingHorizontal: 7,
@@ -149,7 +173,7 @@ async function startChat() {
                     style={{
                       fontSize: 9,
                       fontWeight: "bold",
-                      color: "rgba(0,0,0,1)",
+                      color: theme.colors.onSurfaceVariant,
                       textTransform: "uppercase",
                     }}
                   >
@@ -222,9 +246,9 @@ async function startChat() {
             </View>
           </View>
             
-          <View style={{ backgroundColor: "rgba(0,0,0,0.05)", borderRadius: 8, padding: 12, marginTop: 4, marginBottom: 16 }}>
+          <View style={{ backgroundColor: theme.colors.surfaceVariant, borderRadius: 8, padding: 12, marginTop: 4, marginBottom: 16 }}>
             <Text variant="titleMedium" style={{ marginBottom: 4 }}>Item Description</Text>
-            <Text variant="bodyMedium" style={{ color: "rgba(0,0,0,0.7)", lineHeight: 22 }}>
+            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 22 }}>
               {post.description}
             </Text>
           </View>
@@ -232,14 +256,14 @@ async function startChat() {
           {post.postType === "rent" && post.rentalPriceDuration && (
             <View style={{ padding: 8, marginBottom: 16 }}>
               <Text variant="titleMedium" style={{ marginBottom: 2 }}>Available For</Text>
-              <Text variant="bodyMedium" style={{ color: "rgba(0,0,0,0.7)" }}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
                 {post.rentalPriceDuration}
               </Text>
             </View>
           )}
 
           { post.location && (
-            <View style={{ borderRadius: 8, backgroundColor: "rgba(225,225,225,1)", border: 2, borderColor:'#aeaeae', overflow: "hidden" }} elevation={4}>
+            <View style={{ borderRadius: 8, backgroundColor: theme.colors.surfaceVariant, borderWidth: 0.2, borderColor: theme.colors.outline, overflow: "hidden", marginBottom: 16  }} elevation={4}>
               <Pressable
                 onPress={() =>
                   Linking.openURL(
@@ -259,21 +283,47 @@ async function startChat() {
                 )}
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <Text variant="titleMedium" style={{ paddingLeft: 12, paddingTop: 8, marginBottom: 4 }}>Pickup Location</Text>
-                  <Ionicons name="open-outline" size={16} color="black" style={{ marginLeft: 6, paddingTop: 6, marginBottom: 4 }} />
+                  <Ionicons name="open-outline" size={16} color={theme.colors.onSurface} style={{ marginLeft: 6, paddingTop: 6, marginBottom: 4 }} />
                 </View>
-                <Text variant="bodySmall" style={{ paddingHorizontal: 12, paddingBottom: 12, color: "rgba(0,0,0,0.7)" }}>
+                <Text variant="bodySmall" style={{ paddingHorizontal: 12, paddingBottom: 12, color: theme.colors.onSurfaceVariant }}>
                   {post.location?.text?.text}
                 </Text>
               </Pressable>
               
             </View>
           )}
+        <Divider style={{ marginVertical: 16}} />
+        <Text variant="titleMedium" style={{ marginBottom: 2, paddingHorizontal: 8 }}>Listed by</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 16, width: "80%", paddingHorizontal: 8}}>
+          {userImage ? (
+            <Image source={{ uri: userImage }} style={{ width: 48, height: 48, borderRadius: 24, marginRight: 12 }} />
+          ) : (
+            <Ionicons name="person-circle" size={48} color={theme.colors.onSurfaceVariant} style={{ marginRight: 12 }} />
+          )}
+          <View>
+            <Text variant="titleSmall" style={{ fontWeight: "bold" }}>{userName}</Text>
+            {userBio ? (
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{userBio}</Text>
+            ) : null}
+          </View>
+        </View>
         </ScrollView>
       )}
 
-      <Button onPress={startChat} mode="contained" style={{ margin: 8, width: "90%", alignSelf: "center", borderRadius: 16, height: 45, justifyContent: "center" }}>
-        Contact Seller
-      </Button>
-    </>
+      <View style={{ backgroundColor: theme.colors.background, paddingBottom: 24, paddingTop: 8 }}>
+        <Button
+          onPress={startChat}
+          mode="contained"
+          style={{
+            marginHorizontal: 24,
+            borderRadius: 16,
+            height: 45,
+            justifyContent: "center",
+          }}
+        >
+          Contact Seller
+        </Button>
+      </View>
+    </View>
   );
 }

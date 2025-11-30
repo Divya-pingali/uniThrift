@@ -1,6 +1,7 @@
+import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { collection, getDocs } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Button, Text } from "react-native-paper";
@@ -9,10 +10,14 @@ import { db } from "../../firebaseConfig";
 function MapScreen() {
   const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+
   const router = useRouter();
+  const mapRef = useRef(null);
 
   const MAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
+  // Group same-location posts for jitter
   const locationGroups = posts.reduce((acc, post) => {
     const key = `${post.location?.latitude},${post.location?.longitude}`;
     if (!acc[key]) acc[key] = [];
@@ -22,7 +27,6 @@ function MapScreen() {
 
   function getJitterPosition(index, total) {
     if (total <= 1) return { latOffset: 0, lngOffset: 0 };
-
     const radius = 0.00012;
     const angle = (index / total) * 2 * Math.PI;
 
@@ -32,6 +36,7 @@ function MapScreen() {
     };
   }
 
+  // Fetch posts + geocode if needed
   useEffect(() => {
     const fetchPosts = async () => {
       const snap = await getDocs(collection(db, "posts"));
@@ -68,19 +73,49 @@ function MapScreen() {
 
       setPosts(updatedData);
     };
+
     fetchPosts();
+  }, []);
+
+  useEffect(() => {
+    const getLocation = async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+
+      const loc = await Location.getCurrentPositionAsync({});
+      const coords = {
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+      };
+
+      setUserLocation(coords);
+
+      mapRef.current?.animateToRegion(
+        {
+          ...coords,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        },
+        500
+      );
+    };
+
+    getLocation();
   }, []);
 
   return (
     <View style={{ flex: 1 }}>
       <MapView
+        ref={mapRef}
         style={StyleSheet.absoluteFill}
         provider={PROVIDER_GOOGLE}
+        showsUserLocation={true}
+        showsMyLocationButton={true}
         initialRegion={{
-          latitude: 22.3193,
-          longitude: 114.1694,
-          latitudeDelta: 0.08,
-          longitudeDelta: 0.08,
+          latitude: userLocation?.latitude || 22.3193,
+          longitude: userLocation?.longitude || 114.1694,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
         }}
       >
         {posts.map(post => {
@@ -95,17 +130,20 @@ function MapScreen() {
 
           const lat = post.location.latitude + latOffset;
           const lng = post.location.longitude + lngOffset;
-          
+
           return (
             <Marker
               key={post.id}
               coordinate={{ latitude: lat, longitude: lng }}
               onPress={() => setSelectedPost(post)}
-               pinColor={
-                post.postType === "sell" ? "green" :
-                post.postType === "rent" ? "blue" :
-                post.postType === "donate" ? "purple" :
-                "red"
+              pinColor={
+                post.postType === "sell"
+                  ? "green"
+                  : post.postType === "rent"
+                  ? "blue"
+                  : post.postType === "donate"
+                  ? "purple"
+                  : "red"
               }
             />
           );
