@@ -5,7 +5,6 @@ import { collection, doc, getDoc, getFirestore, onSnapshot, query, where } from 
 import { useEffect, useState } from "react";
 import { Dimensions, FlatList, Image, StyleSheet, TouchableHighlight, View } from "react-native";
 import { Button, Text, useTheme } from "react-native-paper";
-import BackButton from "../../components/BackButton";
 import PostCard from "../../components/PostCard";
 import { auth } from "../../firebaseConfig";
 
@@ -74,9 +73,8 @@ export default function Profile() {
 
   const renderHeader = () => (
     <>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", marginBottom: 32 }}>
-        <BackButton fallback="/(tabs)/home" />
-        <Text variant="headlineMedium" style={{ fontWeight: "bold", marginLeft: 8 }}>Profile</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", marginBottom: 24}}>
+        <Text variant="headlineMedium" style={{ fontWeight: "bold" }}>Profile</Text>
         <View style={{ flex: 1, alignItems: "flex-end" }}>
           <Button mode="text" onPress={signOut} textColor={theme.colors.error}>Sign Out</Button>
         </View>

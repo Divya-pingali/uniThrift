@@ -232,12 +232,15 @@ export default function Post() {
   }
   return (
     <KeyboardAvoidingView
-      style={[styles.keyboardView, { backgroundColor: theme.colors.background }]}
+      style={styles.keyboardView}
       behavior={"height"}
     >
+      <View style={{ backgroundColor: theme.colors.background, paddingTop: 8}}>
+        <BackButton fallback="/(tabs)/home" />
+      </View>
       <FlatList
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        style={[styles.scroll, { backgroundColor: theme.colors.background }]}
+        contentContainerStyle={[styles.content, { backgroundColor: theme.colors.background }]}
         keyboardShouldPersistTaps="handled"
         data={[]}
         scrollEnabled={true}
@@ -246,9 +249,8 @@ export default function Post() {
         showsVerticalScrollIndicator={false}
         overScrollMode="never"
         ListHeaderComponent={
-          <View style={styles.content}>
+          <View style={[styles.content, { backgroundColor: theme.colors.background }]}> 
             <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "flex-start" }}>
-              <BackButton fallback="/(tabs)/home"/>
             <Text variant="headlineMedium" style={styles.header}>
               {id ? 'Edit Listing' : 'New Listing'}
             </Text>
@@ -501,7 +503,6 @@ export default function Post() {
           </Button>
         </Dialog.Actions>
       </Dialog>
-      {/* Delete confirmation dialog */}
       <Dialog visible={deleteDialogVisible} onDismiss={() => setDeleteDialogVisible(false)}>
         <Dialog.Title style={styles.header}>Are you sure?</Dialog.Title>
         <Dialog.Content>
@@ -540,7 +541,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    marginTop: 24,
     marginBottom: 8,
     fontWeight: '800',
   },
@@ -551,8 +551,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   content: {
-    paddingHorizontal: 8,
-    paddingBottom: 0
+    paddingHorizontal: 8
   },
   descriptionInput: {
     marginBottom: 16,

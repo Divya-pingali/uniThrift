@@ -32,7 +32,7 @@ import {
   Text,
   useTheme,
 } from "react-native-paper";
-import BackButton from "../../components/BackButton"; // Adjust path if needed
+import BackButton from "../../components/BackButton";
 import { auth, db } from "../../firebaseConfig";
 
 export default function ChatScreen() {
@@ -131,7 +131,7 @@ export default function ChatScreen() {
     }
     if (post.status === "exchanged") return "The product has been delivered.";
     if (post.status === "completed")
-      return "The product has been delivered and the payment has been completed.";
+      return "The product has been delivered and any payment has been completed.";
     if (post.status === "unpaid")
       return "The product has been delivered but the payment is pending.";
     return null;
@@ -312,7 +312,7 @@ export default function ChatScreen() {
             {...props}
             wrapperStyle={{
               left: {
-                backgroundColor: theme.colors.surfaceContainer,
+                backgroundColor: theme.colors.surfaceVariant,
               },
               right: {
                 backgroundColor: theme.colors.primary,
@@ -379,14 +379,14 @@ export default function ChatScreen() {
 const makeStyles = (theme) =>
   StyleSheet.create({
     header: {
-      paddingTop: 40,
+      paddingTop: 12,
       paddingBottom: 10,
       paddingRight: 16,
       backgroundColor: theme.colors.surface,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.outlineVariant,
       flexDirection: "row",
-      alignItems: "center",
+      alignItems: "center"
     },
     username: {
       fontWeight: "bold",
@@ -411,8 +411,8 @@ const makeStyles = (theme) =>
     },
     center: { flex: 1, justifyContent: "center", alignItems: "center" },
     smallBtn: { paddingHorizontal: 10, borderRadius: 8 },
-    rightActions: { flexDirection: "row", alignItems: "center" },
-    qrIcon: { marginHorizontal: 12 },
+    rightActions: { flexDirection: "row", alignItems: "center", alignSelf: "center" },
+    qrIcon: { marginHorizontal: 12, alignSelf: "center"  },
     composer: {
       paddingTop: 8,
     },

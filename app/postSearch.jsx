@@ -99,26 +99,33 @@ export default function PostSearchScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", marginBottom: 32, marginTop: 16 }}>
-        <BackButton fallback="/(tabs)/home" />
-        <Text variant="headlineMedium" style={{ fontWeight: "bold", marginLeft: 8 }}>
-          Search Posts
-        </Text>
-      </View>
-      <Searchbar
-        placeholder="Search posts…"
-        value={search}
-        onChangeText={handleChange}
-        onSubmitEditing={() => {
-          setSuggestions([]);
-          searchPosts(search);
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          marginHorizontal: 14,
+          marginTop: 14,
         }}
-        style={{ margin: 14, backgroundColor: theme.colors.surfaceContainerLow }}
-        inputStyle={{ color: theme.colors.onSurface }}
-        placeholderTextColor={theme.colors.onSurfaceVariant}
-        iconColor={theme.colors.primary}
-        autoFocus
-      />
+      >
+        <BackButton fallback="/(tabs)/home" />
+        <Searchbar
+          placeholder="Search posts…"
+          value={search}
+          onChangeText={handleChange}
+          onSubmitEditing={() => {
+            setSuggestions([]);
+            searchPosts(search);
+          }}
+          style={{
+            flex: 1,
+            backgroundColor: theme.colors.surfaceContainerLow,
+          }}
+          inputStyle={{ color: theme.colors.onSurface }}
+          placeholderTextColor={theme.colors.onSurfaceVariant}
+          iconColor={theme.colors.primary}
+          autoFocus
+        />
+      </View>
       {suggestions.length > 0 && (
         <View
           style={{

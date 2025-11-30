@@ -8,7 +8,7 @@ import { Button, Divider, Text, useTheme } from "react-native-paper";
 import { db } from "../firebaseConfig";
 
 import { useRouter } from "expo-router";
-import BackButton from "../components/BackButton"; // Adjust path if needed
+import BackButton from "../components/BackButton";
 import CATEGORY_COLORS from "../constants/categoryColors";
 import { auth } from "../firebaseConfig";
 
@@ -133,9 +133,8 @@ async function startChat() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", marginBottom: 32, paddingHorizontal: 24, paddingTop: 24 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", marginTop: 8 }}>
         <BackButton fallback="/(tabs)/home" />
-        <Text variant="headlineMedium" style={{ fontWeight: "bold", marginLeft: 8 }}>Post Details</Text>
       </View>
 
       {loading || !post ? (
@@ -145,7 +144,7 @@ async function startChat() {
       ) : (
         <ScrollView
           style={{ backgroundColor: theme.colors.background }}
-          contentContainerStyle={{ padding: 24 }}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 8 }}
           showsVerticalScrollIndicator={false}
         >
           <Image

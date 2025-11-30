@@ -2,10 +2,9 @@ import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { collection, getDocs } from "firebase/firestore";
 import { useEffect, useRef, useState } from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { Appearance, Image, StyleSheet, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Button, Text, useTheme } from "react-native-paper";
-import BackButton from "../../components/BackButton";
 import { db } from "../../firebaseConfig";
 
 function MapScreen() {
@@ -13,6 +12,8 @@ function MapScreen() {
   const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme());
 
   const router = useRouter();
   const mapRef = useRef(null);
@@ -103,34 +104,56 @@ function MapScreen() {
     getLocation();
   }, []);
 
+  useEffect(() => {
+    const sub = Appearance.addChangeListener(({ colorScheme }) => {
+      setColorScheme(colorScheme);
+    });
+
+    return () => sub.remove();
+  }, []);
+
   return (
     <View style={{ flex: 1 }}>
       <View
+        onLayout={e => {
+          const h = e.nativeEvent.layout.height || 0;
+          setHeaderHeight(h);
+        }}
         style={{
-          flexDirection: "row",
-          alignItems: "center",
+          flexDirection: "column",
+          alignItems: "flex-start",
           justifyContent: "flex-start",
           paddingTop: 24,
-          paddingHorizontal: 16,
+          paddingHorizontal: 8,
           backgroundColor: theme.colors.background,
-          zIndex: 10,
         }}
       >
-        <BackButton fallback="/(tabs)/home" />
         <Text
+          variant="headlineMedium"
           style={{
             fontWeight: "bold",
-            fontSize: 22,
             marginLeft: 8,
             color: theme.colors.onSurface,
           }}
         >
           Map
         </Text>
+        <Text
+          variant="titleMedium"
+          style={{
+            marginLeft: 8,
+            marginBottom: 12,
+            color: theme.colors.onSurface,
+            opacity: 0.8,
+          }}
+        >
+          Find listings near you
+        </Text>
       </View>
       <MapView
+        key={colorScheme}
         ref={mapRef}
-        style={StyleSheet.absoluteFill}
+        style={[StyleSheet.absoluteFill, { top: headerHeight, bottom: 0 }]}
         provider={PROVIDER_GOOGLE}
         showsUserLocation={true}
         showsMyLocationButton={true}
@@ -174,27 +197,59 @@ function MapScreen() {
       </MapView>
 
       {selectedPost && (
-        <View style={styles.previewCard}>
+        <View style={[styles.previewCard, { backgroundColor: theme.colors.surfaceContainerLowest }]}>
           <Image
             source={{ uri: selectedPost.image }}
             style={styles.previewImg}
           />
 
           <View style={{ flex: 1, marginLeft: 10 }}>
-            <Text style={styles.previewTitle}>{selectedPost.title}</Text>
+            <Text style={[styles.previewTitle, { color: theme.colors.onSurface }]}>{selectedPost.title}</Text>
 
-            <Text style={styles.previewPrice}>
-              {selectedPost.postType === "sell" &&
-                `$${selectedPost.sellingPrice}`}
-              {selectedPost.postType === "rent" &&
-                `$${selectedPost.rentalPrice} / ${selectedPost.rentalPriceUnit}`}
-              {selectedPost.postType === "donate" && "FREE"}
-            </Text>
+            {/* Price badge similar to postDetail.jsx */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+              <View
+                style={{
+                  borderRadius: 8,
+                  paddingVertical: 6,
+                  paddingHorizontal: 10,
+                  backgroundColor:
+                    selectedPost.postType === "sell"
+                      ? '#2e7d3215'
+                      : selectedPost.postType === "rent"
+                      ? '#0d47a11A'
+                      : '#6a1b9a20',
+                }}
+              >
+                {selectedPost.postType === 'sell' && (
+                  <Text style={{ fontWeight: '700', fontSize: 14, color: '#2e7d32' }}>
+                    {`$${selectedPost.sellingPrice}`}
+                  </Text>
+                )}
+
+                {selectedPost.postType === 'rent' && (
+                  <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                    <Text style={{ fontWeight: '700', fontSize: 14, color: '#0d47a1' }}>
+                      {`$${selectedPost.rentalPrice}`}
+                    </Text>
+                    <Text style={{ color: '#0d47a1', marginLeft: 6 }}>{`/ ${selectedPost.rentalPriceUnit}`}</Text>
+                  </View>
+                )}
+
+                {selectedPost.postType === 'donate' && (
+                  <Text style={{ fontWeight: '700', fontSize: 14, color: '#6a1b9a' }}>
+                    {'FREE'}
+                  </Text>
+                )}
+              </View>
+            </View>
           </View>
 
           <Button
             mode="contained"
-            style={{ margin: 8, borderRadius: 4, height: 45 }}
+            buttonColor={theme.colors.primary}
+            textColor={theme.colors.onPrimary}
+            style={{ margin: 8, borderRadius: 8 }}
             onPress={() => router.push(`/postDetail?id=${selectedPost.id}`)}
           >
             View

@@ -13,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { Chip, Text, useTheme } from "react-native-paper";
-import BackButton from "../components/BackButton"; // Add this import
+import BackButton from "../components/BackButton";
 import PostCard from "../components/PostCard";
 import CATEGORY_COLORS from "../constants/categoryColors";
 import { db } from "../firebaseConfig";
@@ -78,8 +78,7 @@ export default function CategoriesPosts() {
 
   const renderHeader = () => (
     <>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start", marginBottom: 20, marginTop: 16 }}>
-        <BackButton fallback="/(tabs)/home" />
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start" }}>
         <Text variant="headlineMedium" style={{ fontWeight: "bold" }}>
           Browse
         </Text>
@@ -143,7 +142,12 @@ export default function CategoriesPosts() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <View style={{ backgroundColor: theme.colors.background, paddingTop: 8 }}>
+        <BackButton fallback="/(tabs)/home" />
+      </View>
       <FlatList
+        style={{ backgroundColor: theme.colors.background }}
+        contentContainerStyle={{ paddingHorizontal: 16, backgroundColor: theme.colors.background }}
         showsVerticalScrollIndicator={false}
         data={filteredPosts}
         numColumns={2}
@@ -157,9 +161,8 @@ export default function CategoriesPosts() {
             <PostCard post={item} />
           </View>
         )}
-        ListHeaderComponent={renderHeader}
+  ListHeaderComponent={renderHeader}
         columnWrapperStyle={{ justifyContent: "space-between" }}
-        contentContainerStyle={{ paddingHorizontal: 16 }}
         ListEmptyComponent={
           <Text style={{ textAlign: "center", marginTop: 280}}>
             No posts found.

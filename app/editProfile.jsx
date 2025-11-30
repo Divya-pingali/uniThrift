@@ -93,7 +93,9 @@ export default function EditProfile() {
 
   return (
     <>
-      <BackButton fallback="/profile" />
+      <View style={{ backgroundColor: theme.colors.background }}>
+        <BackButton fallback="/profile" />
+      </View>
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -197,7 +199,7 @@ const getStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   content: {
-    padding: 16,
+    paddingHorizontal: 16,
     flexGrow: 1,
   },
   headerContainer: {

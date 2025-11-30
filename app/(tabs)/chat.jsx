@@ -15,9 +15,8 @@ import {
   ActivityIndicator,
   Searchbar,
   Text,
-  useTheme,
+  useTheme
 } from "react-native-paper";
-import BackButton from "../../components/BackButton";
 import { auth, db } from "../../firebaseConfig";
 
 export default function ChatListScreen() {
@@ -73,7 +72,6 @@ export default function ChatListScreen() {
       });
       setUserProfiles(newProfiles);
 
-      // Load product titles
       const titlePromises = items.map(async (chat) => {
         if (!chat.listingId || productTitles[chat.listingId]) return null;
 
@@ -137,7 +135,6 @@ export default function ChatListScreen() {
   return (
     <View style={styles.container}>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "flex-start" }}>
-        <BackButton fallback="/(tabs)/home" />
         <Text variant="headlineMedium" style={styles.title}>
           Chats
         </Text>
@@ -159,9 +156,7 @@ export default function ChatListScreen() {
         <FlatList
           data={filteredChats}
           keyExtractor={(item) => item.id}
-          ItemSeparatorComponent={() => (
-            <View style={{ height: 1, backgroundColor: theme.colors.outlineVariant }} />
-          )}
+          showsVerticalScrollIndicator={false}
           renderItem={({ item }) => {
             const otherUserId = item.participants.find(
               (uid) => uid !== firebaseUser.uid
@@ -206,7 +201,7 @@ export default function ChatListScreen() {
                   <Ionicons
                     name="person-circle"
                     size={48}
-                    color={theme.colors.primary}
+                    color={theme.colors.onSurfaceVariant}
                   />
                 </View>
 

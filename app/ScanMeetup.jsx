@@ -140,18 +140,15 @@ export default function ScanMeetup() {
     <View style={styles.container}>
       <View
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          marginBottom: 32,
-          marginTop: 32,
-          zIndex: 10,
+          position: "absolute",
+          top: 16,
+          left: 16,
+          zIndex: 20,
         }}
       >
-        <BackButton fallback="/(tabs)/chat" />
-        <Text variant="headlineSmall" style={{ fontWeight: "bold", marginLeft: 8 }}>
-          Scan Meetup
-        </Text>
+        <View style={[styles.backButtonBg, { backgroundColor: theme.colors.surface }]}> 
+          <BackButton fallback="/(tabs)/chat" />
+        </View>
       </View>
       <CameraView
         style={StyleSheet.absoluteFillObject}
@@ -159,12 +156,21 @@ export default function ScanMeetup() {
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
       />
 
+      <View style={[styles.bottomOverlay, { backgroundColor: theme.colors.surface }]}> 
+        <Text
+          variant="headlineSmall"
+          style={[styles.titleText, { color: theme.colors.onSurface }]}
+        >
+          Verify Meetup
+        </Text>
+      </View>
+
       {scanned && (
         <TouchableOpacity
           style={styles.button}
           onPress={() => setScanned(false)}
         >
-          <Text style={styles.buttonText}>Scan Again</Text>
+          <Text style={styles.buttonText}>Click here to scan again</Text>
         </TouchableOpacity>
       )}
 
@@ -184,7 +190,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   button: {
     position: "absolute",
-    bottom: 40,
+    bottom: 150,
     alignSelf: "center",
     backgroundColor: "#333",
     paddingHorizontal: 20,
@@ -192,4 +198,30 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonText: { color: "white", fontSize: 16 },
+  titleContainer: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  titleText: { fontWeight: "bold", fontSize: 20 },
+  backButtonBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 6,
+  },
+  bottomOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 15,
+  },
 });
