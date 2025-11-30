@@ -1,6 +1,6 @@
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { useEffect, useRef, useState } from "react";
 import { Appearance, Image, StyleSheet, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
@@ -40,7 +40,11 @@ function MapScreen() {
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const snap = await getDocs(collection(db, "posts"));
+      const postsQuery = query(
+        collection(db, "posts"),
+        where("status", "==", "available")
+      );
+      const snap = await getDocs(postsQuery);
       let data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
       const updatedData = await Promise.all(
