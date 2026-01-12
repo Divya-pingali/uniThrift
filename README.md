@@ -2,6 +2,8 @@
 
 UniThrift is a student-only mobile marketplace designed for University of Hong Kong (HKU) students. It allows students to buy, sell, rent, and donate items safely within the campus community. The app promotes affordability, trust, and sustainability by encouraging item reuse.
 
+[![UniThrift Demo Video](https://img.youtube.com/vi/ABC123XYZ/0.jpg)](https://www.youtube.com/watch?v=ABC123XYZ)
+
 ## Overview
 
 Every year, students move in and out of HKU, creating a constant need for dorm essentials, books, electronics, and other items. UniThrift provides a secure and verified platform where HKU students can exchange items easily and locally, helping reduce waste, save money, and encourage reuse of items within the student community.
